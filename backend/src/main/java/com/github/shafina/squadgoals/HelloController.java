@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class HelloController {
 
     @GetMapping("/public/greeting")
-    public String index() {
+    public String getPublicGreeting() {
         return "Greetings from Spring Boot!";
     }
 
