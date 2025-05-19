@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { ModeToggle } from "@/components/ModeToggle";
 
 export default function Header() {
   return (
@@ -20,6 +21,9 @@ export default function Header() {
           </li>
           <li>
             <a href="/signup">Sign Up</a>
+          </li>
+          <li>
+            <ModeToggle />
           </li>
         </ul>
       </nav>
