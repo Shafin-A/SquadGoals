@@ -29,7 +29,11 @@ export function SignUpForm({
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const handleSignUp = async (email: string, password: string) => {
+  const handleSignUp = async (
+    name: string,
+    email: string,
+    password: string
+  ) => {
     try {
       setError(null);
       setLoading(true);
@@ -38,10 +42,27 @@ export function SignUpForm({
         email,
         password
       );
-      const idToken = await userCredential.user.getIdToken();
-      console.log("ID Token:", idToken);
 
       const user = userCredential.user;
+
+      const idToken = await user.getIdToken();
+      console.log("ID Token:", idToken);
+
+      const profile = {
+        name: name,
+        email: email,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      };
+
+      await fetch("http://localhost:8080/api/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify(profile),
+      });
+
       await sendEmailVerification(user);
 
       await signOut(auth);
@@ -54,7 +75,7 @@ export function SignUpForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    handleSignUp(email, password);
+    handleSignUp(name, email, password);
   };
 
   return (
