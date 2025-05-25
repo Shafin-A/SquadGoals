@@ -15,6 +15,7 @@ import {
   createUserWithEmailAndPassword,
   sendEmailVerification,
   signOut,
+  validatePassword,
 } from "firebase/auth";
 import { auth } from "@/firebase";
 import { useState } from "react";
@@ -37,6 +38,26 @@ export function SignUpForm({
     try {
       setError(null);
       setLoading(true);
+
+      const validation = await validatePassword(auth, password);
+
+      if (!validation.isValid) {
+        let msg = "Password requirements:\n";
+        if (!validation.meetsMinPasswordLength)
+          msg += "- At least 6 characters\n";
+        if (!validation.containsUppercaseLetter)
+          msg += "- At least one uppercase letter\n";
+        if (!validation.containsLowercaseLetter)
+          msg += "- At least one lowercase letter\n";
+        if (!validation.containsNumericCharacter)
+          msg += "- At least one number\n";
+        if (!validation.containsNonAlphanumericCharacter)
+          msg += "- At least one special character\n";
+        setError(msg.trim());
+        setLoading(false);
+        return;
+      }
+
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         email,
@@ -126,7 +147,9 @@ export function SignUpForm({
                 {loading ? "Loading" : "Sign Up"}
               </Button>
               {error && (
-                <div className="text-red-500 text-sm text-center">{error}</div>
+                <div className="text-red-500 text-sm text-center whitespace-pre-wrap">
+                  {error}
+                </div>
               )}
             </div>
             <div className="mt-4 text-center text-sm">
