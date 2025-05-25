@@ -1,9 +1,12 @@
 package com.github.shafina.squadgoals.dto;
 
+import java.time.LocalDateTime;
+
 public class CreateUserRequest{
     private String name;
     private String email;
     private String timezone;
+    private LocalDateTime createdAt;
 
     public String getName() {
         return name;
@@ -27,5 +30,13 @@ public class CreateUserRequest{
 
     public void setTimezone(String timezone) {
         this.timezone = timezone;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 }

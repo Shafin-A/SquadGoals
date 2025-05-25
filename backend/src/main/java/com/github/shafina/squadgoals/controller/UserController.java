@@ -34,6 +34,7 @@ public class UserController {
         user.setName(request.getName());
         user.setEmail(request.getEmail());
         user.setTimezone(request.getTimezone());
+        user.setCreatedAt(request.getCreatedAt());
 
         User savedUser = userRepository.save(user);
 
