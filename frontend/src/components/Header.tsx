@@ -14,10 +14,10 @@ export default function Header() {
             <a href="/">Home</a>
           </li>
           <li>
-            <a href="/challenges">Challenges</a>
+            <a href="/squads">Squads</a>
           </li>
           <li>
-            <a href="/squads">Squads</a>
+            <a href="/goals">Goals</a>
           </li>
           <li>
             <a href="/signup">Sign Up</a>

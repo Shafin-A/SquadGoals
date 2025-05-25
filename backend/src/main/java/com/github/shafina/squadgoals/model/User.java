@@ -4,11 +4,14 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.SourceType;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "users")
-public class User {
+public class User implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,6 +24,9 @@ public class User {
 
     @Column(nullable = false, unique = true)
     private String email;
+
+    @ManyToMany(mappedBy = "squad")
+    private Set<Goal> squadGoals = new HashSet<>();
 
     private String timezone;
 
@@ -58,6 +64,14 @@ public class User {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public Set<Goal> getSquadGoals() {
+        return squadGoals;
+    }
+
+    public void setSquadGoals(Set<Goal> squadGoals) {
+        this.squadGoals = squadGoals;
     }
 
     public String getTimezone() {
