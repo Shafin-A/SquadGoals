@@ -37,6 +37,14 @@ public class Goal implements Serializable {
     )
     private Set<User> squad = new HashSet<>();
 
+    @ManyToMany
+    @JoinTable(
+            name = "goal_tags",
+            joinColumns = @JoinColumn(name = "goal_id"),
+            inverseJoinColumns = @JoinColumn(name = "tag_id")
+    )
+    private Set<Tag> tags = new HashSet<>();
+
     private String timezone;
 
     @Column(updatable = false, name = "created_at")
@@ -93,6 +101,14 @@ public class Goal implements Serializable {
 
     public void setSquad(Set<User> squad) {
         this.squad = squad;
+    }
+
+    public Set<Tag> getTags() {
+        return tags;
+    }
+
+    public void setTags(Set<Tag> tags) {
+        this.tags = tags;
     }
 
     public String getTimezone() {
