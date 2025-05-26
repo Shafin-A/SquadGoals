@@ -26,6 +26,9 @@ public class Goal implements Serializable {
     @JoinColumn(name = "created_by", nullable = false)
     private User createdBy;
 
+    @Column(name = "start_at")
+    private LocalDateTime startAt;
+
     @Enumerated(EnumType.STRING)
     private Frequency frequency;
 
@@ -133,5 +136,13 @@ public class Goal implements Serializable {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public LocalDateTime getStartAt() {
+        return startAt;
+    }
+
+    public void setStartAt(LocalDateTime startAt) {
+        this.startAt = startAt;
     }
 }
