@@ -3,6 +3,7 @@ package com.github.shafina.squadgoals.controller;
 import com.github.shafina.squadgoals.dto.CreateUserRequest;
 import com.github.shafina.squadgoals.model.User;
 import com.github.shafina.squadgoals.repository.UserRepository;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -22,8 +23,8 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createUser(@RequestBody CreateUserRequest request, Authentication authentication) {
-        String firebaseUid = (String) authentication.getPrincipal();
+    public ResponseEntity<?> createUser(@Valid @RequestBody CreateUserRequest request, Authentication authentication) {
+        String firebaseUid = authentication.getName();
 
         if (userRepository.existsByFirebaseUid(firebaseUid)) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("User already exists.");

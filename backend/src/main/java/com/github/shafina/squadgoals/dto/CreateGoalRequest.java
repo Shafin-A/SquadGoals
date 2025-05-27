@@ -1,18 +1,29 @@
 package com.github.shafina.squadgoals.dto;
 
 import com.github.shafina.squadgoals.enums.Frequency;
-import com.github.shafina.squadgoals.model.User;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDateTime;
 import java.util.Set;
 
 public class CreateGoalRequest {
+    @NotBlank(message = "title is required")
     private String title;
+
     private String description;
+
+    @NotBlank(message = "Timezone is required")
     private String timezone;
+
+    @NotNull(message = "StartAt is required")
     private LocalDateTime startAt;
+
+    @NotNull(message = "Frequency is required")
     private Frequency frequency;
+
     private Set<String> tagNames;
+
     private Set<Long> squadUserIds;
 
     public String getTitle() {

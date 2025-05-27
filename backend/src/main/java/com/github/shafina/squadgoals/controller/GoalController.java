@@ -8,6 +8,7 @@ import com.github.shafina.squadgoals.repository.GoalRepository;
 import com.github.shafina.squadgoals.repository.TagRepository;
 import com.github.shafina.squadgoals.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -15,7 +16,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Collections;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -34,11 +38,11 @@ public class GoalController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createGoal(@RequestBody CreateGoalRequest createGoalRequest, Authentication authentication) {
-        String firebaseUid = (String) authentication.getPrincipal();
+    public ResponseEntity<?> createGoal(@Valid @RequestBody CreateGoalRequest createGoalRequest, Authentication authentication) {
+        String firebaseUid = authentication.getName();
 
         User creator = userRepository.findByFirebaseUid(firebaseUid)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
         Goal goal = new Goal();
         goal.setCreatedBy(creator);
@@ -49,21 +53,26 @@ public class GoalController {
         goal.setStartAt(createGoalRequest.getStartAt());
         goal.setFrequency(createGoalRequest.getFrequency());
 
-        Set<Tag> tagEntities = createGoalRequest.getTagNames().stream()
-                .map(name -> tagRepository.findByName(name).orElseGet(() -> {
+        Set<Tag> tagEntities = Optional.ofNullable(createGoalRequest.getTagNames())
+                .orElse(Collections.emptySet())
+                .stream()
+                .map(tagName -> tagRepository.findByName(tagName).orElseGet(() -> {
                     Tag tag = new Tag();
-                    tag.setName(name);
+                    tag.setName(tagName);
                     return tagRepository.save(tag);
                 }))
                 .collect(Collectors.toSet());
 
         goal.setTags(tagEntities);
 
-        Set<User> squadUsers = createGoalRequest.getSquadUserIds().stream()
+        Set<User> squadUsers = Optional.ofNullable(createGoalRequest.getSquadUserIds())
+                .orElse(Collections.emptySet())
+                .stream()
                 .map(userId -> userRepository.findById(userId)
-                        .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + userId)))
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with ID: " + userId)))
                 .collect(Collectors.toSet());
-        
+
+        squadUsers.add(goal.getCreatedBy());
         goal.setSquad(squadUsers);
 
         Goal savedGoal = goalRepository.save(goal);
