@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { ModeToggle } from "@/components/ModeToggle";
+import { ModeToggle } from "@/components/features/ModeToggle";
 
 export default function Header() {
   return (
