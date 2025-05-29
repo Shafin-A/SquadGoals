@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { ModeToggle } from "@/components/features/ModeToggle";
+import Link from "next/link";
 
 export default function Header() {
   return (
@@ -11,16 +12,16 @@ export default function Header() {
       <nav>
         <ul className="flex space-x-4">
           <li>
-            <a href="/">Home</a>
+            <Link href="/">Home</Link>
           </li>
           <li>
-            <a href="/squads">Squads</a>
+            <Link href="/squads">Squads</Link>
           </li>
           <li>
-            <a href="/goals">Goals</a>
+            <Link href="/goals">Goals</Link>
           </li>
           <li>
-            <a href="/signup">Sign Up</a>
+            <Link href="/signup">Sign Up</Link>
           </li>
           <li>
             <ModeToggle />

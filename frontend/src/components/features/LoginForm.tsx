@@ -41,8 +41,12 @@ export function LoginForm({
 
       const idToken = await user.getIdToken();
       console.log("ID Token:", idToken);
-    } catch (err: any) {
-      setError(err.message || "Failed to login up");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message || "Failed to login");
+      } else {
+        setError("Failed to login");
+      }
     } finally {
       setLoading(false);
     }
