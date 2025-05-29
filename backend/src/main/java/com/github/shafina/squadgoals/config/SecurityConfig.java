@@ -18,7 +18,9 @@ public class SecurityConfig {
 
     @Bean
     UserDetailsService emptyDetailsService() {
-        return username -> { throw new UsernameNotFoundException("No local users, only firebase tokens allowed"); };
+        return username -> {
+            throw new UsernameNotFoundException("No local users, only firebase tokens allowed");
+        };
     }
 
     private final FirebaseTokenFilter firebaseTokenFilter;

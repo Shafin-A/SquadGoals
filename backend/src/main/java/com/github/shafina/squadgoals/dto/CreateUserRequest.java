@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDateTime;
 
-public class CreateUserRequest{
+public class CreateUserRequest {
     @NotBlank(message = "Name is required")
     private String name;
 

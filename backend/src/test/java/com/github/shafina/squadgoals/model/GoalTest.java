@@ -3,6 +3,7 @@ package com.github.shafina.squadgoals.model;
 import com.github.shafina.squadgoals.enums.Frequency;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;

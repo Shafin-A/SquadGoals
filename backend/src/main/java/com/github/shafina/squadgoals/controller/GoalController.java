@@ -7,7 +7,6 @@ import com.github.shafina.squadgoals.model.User;
 import com.github.shafina.squadgoals.repository.GoalRepository;
 import com.github.shafina.squadgoals.repository.TagRepository;
 import com.github.shafina.squadgoals.repository.UserRepository;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -38,7 +37,8 @@ public class GoalController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createGoal(@Valid @RequestBody CreateGoalRequest createGoalRequest, Authentication authentication) {
+    public ResponseEntity<?> createGoal(@Valid @RequestBody CreateGoalRequest createGoalRequest,
+                                        Authentication authentication) {
         String firebaseUid = authentication.getName();
 
         User creator = userRepository.findByFirebaseUid(firebaseUid)
@@ -69,7 +69,8 @@ public class GoalController {
                 .orElse(Collections.emptySet())
                 .stream()
                 .map(userId -> userRepository.findById(userId)
-                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with ID: " + userId)))
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                                "User not found with ID: " + userId)))
                 .collect(Collectors.toSet());
 
         squadUsers.add(goal.getCreatedBy());
