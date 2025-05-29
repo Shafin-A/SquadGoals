@@ -28,6 +28,12 @@ export default function Home() {
             />
           </div>
         </div>
+        <div className="w-full lg:w-1/2 mt-8">
+          <h1 className="text-3xl md:text-4xl font-bold mb-4 text-center lg:text-left">
+            Recent Goals Looking For Squad Members
+          </h1>
+          <div>goals go here...</div>
+        </div>
       </main>
     </div>
   );
