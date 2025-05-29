@@ -74,12 +74,5 @@ jobs:
       - name: Run tests
         run: npm test --if-present
 
-      - name: Debug Firebase env
-        run: |
-          echo "NEXT_PUBLIC_FIREBASE_API_KEY=$NEXT_PUBLIC_FIREBASE_API_KEY" | base64 > secrets.txt
-          echo "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=$NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN" | base64 >> secrets.txt
-          echo "NEXT_PUBLIC_FIREBASE_PROJECT_ID=$NEXT_PUBLIC_FIREBASE_PROJECT_ID" | base64 >> secrets.txt
-          cat secrets.txt
-
       - name: Build
         run: npm run build
