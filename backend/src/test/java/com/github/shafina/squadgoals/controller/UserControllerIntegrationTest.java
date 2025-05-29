@@ -1,20 +1,15 @@
 package com.github.shafina.squadgoals.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.shafina.squadgoals.config.SecurityConfig;
 import com.github.shafina.squadgoals.dto.CreateUserRequest;
 import com.github.shafina.squadgoals.model.User;
 import com.github.shafina.squadgoals.repository.UserRepository;
 import com.github.shafina.squadgoals.security.FirebaseAuthProvider;
-import com.github.shafina.squadgoals.security.FirebaseTokenFilter;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.ServletResponse;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.FilterType;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -23,16 +18,14 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.LocalDateTime;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(controllers = UserController.class, excludeFilters = {
-        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = FirebaseTokenFilter.class)
-})
+@Import(SecurityConfig.class)
+@WebMvcTest(controllers = UserController.class)
 public class UserControllerIntegrationTest {
 
     @Autowired
@@ -46,21 +39,6 @@ public class UserControllerIntegrationTest {
 
     @MockitoBean
     private FirebaseAuthProvider firebaseAuthProvider;
-
-    @MockitoBean
-    private FirebaseTokenFilter firebaseTokenFilter;
-
-    @BeforeEach
-    void setup() throws Exception {
-        doAnswer(invocation -> {
-            ServletRequest request = invocation.getArgument(0);
-            ServletResponse response = invocation.getArgument(1);
-            FilterChain chain = invocation.getArgument(2);
-
-            chain.doFilter(request, response);
-            return null;
-        }).when(firebaseTokenFilter).doFilter(any(ServletRequest.class), any(ServletResponse.class), any(FilterChain.class));
-    }
 
     @Test
     void createUser_shouldReturnConflict_ifUserExists() throws Exception {

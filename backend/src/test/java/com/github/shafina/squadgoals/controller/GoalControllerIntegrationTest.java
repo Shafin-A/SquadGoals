@@ -1,6 +1,7 @@
 package com.github.shafina.squadgoals.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.shafina.squadgoals.config.SecurityConfig;
 import com.github.shafina.squadgoals.dto.CreateGoalRequest;
 import com.github.shafina.squadgoals.enums.Frequency;
 import com.github.shafina.squadgoals.model.Goal;
@@ -10,37 +11,34 @@ import com.github.shafina.squadgoals.repository.GoalRepository;
 import com.github.shafina.squadgoals.repository.TagRepository;
 import com.github.shafina.squadgoals.repository.UserRepository;
 import com.github.shafina.squadgoals.security.FirebaseAuthProvider;
-import com.github.shafina.squadgoals.security.FirebaseTokenFilter;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.ServletResponse;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.FilterType;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(controllers = GoalController.class, excludeFilters = {
-        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = FirebaseTokenFilter.class)
-})
+@Import(SecurityConfig.class)
+@WebMvcTest(controllers = GoalController.class)
 public class GoalControllerIntegrationTest {
 
     @Autowired
@@ -60,21 +58,6 @@ public class GoalControllerIntegrationTest {
 
     @MockitoBean
     private FirebaseAuthProvider firebaseAuthProvider;
-
-    @MockitoBean
-    private FirebaseTokenFilter firebaseTokenFilter;
-
-    @BeforeEach
-    void setup() throws Exception {
-        doAnswer(invocation -> {
-            ServletRequest request = invocation.getArgument(0);
-            ServletResponse response = invocation.getArgument(1);
-            FilterChain chain = invocation.getArgument(2);
-
-            chain.doFilter(request, response);
-            return null;
-        }).when(firebaseTokenFilter).doFilter(any(ServletRequest.class), any(ServletResponse.class), any(FilterChain.class));
-    }
 
     @Test
     void createGoal_shouldCreateGoal_whenValidRequest() throws Exception {
@@ -274,9 +257,115 @@ public class GoalControllerIntegrationTest {
         request.setSquadUserIds(Set.of(2L, 3L));
 
         mockMvc.perform(post("/api/goals")
-                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void createGoal_shouldSetIsPublicTrue_whenPublicTrueProvided() throws Exception {
+        String firebaseUid = "test-firebase-uid";
+        CreateGoalRequest request = new CreateGoalRequest();
+        request.setTitle("Test Goal");
+        request.setDescription("desc");
+        request.setTimezone("UTC");
+        request.setStartAt(LocalDateTime.now());
+        request.setFrequency(Frequency.DAILY);
+        request.setPublic(true);
+        User creator = new User();
+        creator.setId(1L);
+        creator.setFirebaseUid(firebaseUid);
+
+        when(userRepository.findByFirebaseUid(firebaseUid)).thenReturn(Optional.of(creator));
+        when(goalRepository.save(any(Goal.class))).thenAnswer(invocation -> {
+            Goal g = invocation.getArgument(0);
+            assertTrue(g.getPublic());
+            return g;
+        });
+
+        mockMvc.perform(post("/api/goals")
+                        .with(user(firebaseUid).roles("USER"))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    void createGoal_shouldSetIsPublicFalse_whenPublicFalseProvided() throws Exception {
+        String firebaseUid = "test-firebase-uid";
+        CreateGoalRequest request = new CreateGoalRequest();
+        request.setTitle("Test Goal");
+        request.setDescription("desc");
+        request.setTimezone("UTC");
+        request.setStartAt(LocalDateTime.now());
+        request.setFrequency(Frequency.DAILY);
+        request.setPublic(false);
+        User creator = new User();
+        creator.setId(1L);
+        creator.setFirebaseUid(firebaseUid);
+
+        when(userRepository.findByFirebaseUid(firebaseUid)).thenReturn(Optional.of(creator));
+        when(goalRepository.save(any(Goal.class))).thenAnswer(invocation -> {
+            Goal g = invocation.getArgument(0);
+            assertFalse(g.getPublic());
+            return g;
+        });
+
+        mockMvc.perform(post("/api/goals")
+                        .with(user(firebaseUid).roles("USER"))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    void createGoal_shouldDefaultIsPublicTrue_whenPublicNull() throws Exception {
+        String firebaseUid = "test-firebase-uid";
+        CreateGoalRequest request = new CreateGoalRequest();
+        request.setTitle("Test Goal");
+        request.setDescription("desc");
+        request.setTimezone("UTC");
+        request.setStartAt(LocalDateTime.now());
+        request.setFrequency(Frequency.DAILY);
+        request.setPublic(null);
+        User creator = new User();
+        creator.setId(1L);
+        creator.setFirebaseUid(firebaseUid);
+
+        when(userRepository.findByFirebaseUid(firebaseUid)).thenReturn(Optional.of(creator));
+        when(goalRepository.save(any(Goal.class))).thenAnswer(invocation -> {
+            Goal g = invocation.getArgument(0);
+            assertTrue(g.getPublic());
+            return g;
+        });
+
+        mockMvc.perform(post("/api/goals")
+                        .with(user(firebaseUid).roles("USER"))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    void getPublicGoals_shouldReturnOnlyPublicGoals() throws Exception {
+        Goal publicGoal = new Goal();
+        publicGoal.setId(1L);
+        publicGoal.setTitle("Public Goal");
+        publicGoal.setPublic(true);
+        Goal privateGoal = new Goal();
+        privateGoal.setId(2L);
+        privateGoal.setTitle("Private Goal");
+        privateGoal.setPublic(false);
+
+        when(goalRepository.findByIsPublicTrue()).thenReturn(List.of(publicGoal));
+
+        mockMvc.perform(get("/api/goals")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].title").value("Public Goal"))
+                .andExpect(jsonPath("$[0].id").value(1L));
     }
 }

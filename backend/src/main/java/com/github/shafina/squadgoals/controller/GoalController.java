@@ -36,7 +36,7 @@ public class GoalController {
 
     @PostMapping
     public ResponseEntity<?> createGoal(@Valid @RequestBody CreateGoalRequest createGoalRequest,
-            Authentication authentication) {
+                                        Authentication authentication) {
         String firebaseUid = authentication.getName();
 
         User creator = userRepository.findByFirebaseUid(firebaseUid)

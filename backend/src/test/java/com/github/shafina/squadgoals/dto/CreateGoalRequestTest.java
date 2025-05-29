@@ -61,4 +61,11 @@ class CreateGoalRequestTest {
         req.setSquadUserIds(ids);
         assertEquals(ids, req.getSquadUserIds());
     }
+
+    @Test
+    void testIsPublicGetterSetter() {
+        CreateGoalRequest req = new CreateGoalRequest();
+        req.setPublic(false);
+        assertEquals(false, req.getPublic());
+    }
 }

@@ -104,6 +104,13 @@ class GoalTest {
     }
 
     @Test
+    void testIsPublicGetterSetter() {
+        Goal goal = new Goal();
+        goal.setPublic(false);
+        assertEquals(false, goal.getPublic());
+    }
+
+    @Test
     void testDefaultSquadAndTagsAreNotNullAndEmpty() {
         Goal goal = new Goal();
         assertNotNull(goal.getSquad());

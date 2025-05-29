@@ -16,12 +16,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-
 
 class GoalControllerTest {
 
@@ -172,5 +172,88 @@ class GoalControllerTest {
                 () -> goalController.createGoal(request, authentication));
         assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
         assertTrue(ex.getReason().contains("User not found with ID: 2"));
+    }
+
+    @Test
+    void createGoal_shouldSetIsPublicTrue_whenPublicTrueProvided() {
+        String firebaseUid = "firebase-uid";
+        when(authentication.getName()).thenReturn(firebaseUid);
+        User creator = new User();
+        creator.setId(1L);
+        creator.setFirebaseUid(firebaseUid);
+        when(userRepository.findByFirebaseUid(firebaseUid)).thenReturn(Optional.of(creator));
+        CreateGoalRequest request = new CreateGoalRequest();
+        request.setTitle("Test Goal");
+        request.setPublic(true);
+        Goal savedGoal = new Goal();
+        savedGoal.setId(1L);
+        when(goalRepository.save(any(Goal.class))).thenAnswer(invocation -> {
+            Goal g = invocation.getArgument(0);
+            assertTrue(g.getPublic());
+            return savedGoal;
+        });
+        ResponseEntity<?> response = goalController.createGoal(request, authentication);
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+    }
+
+    @Test
+    void createGoal_shouldSetIsPublicFalse_whenPublicFalseProvided() {
+        String firebaseUid = "firebase-uid";
+        when(authentication.getName()).thenReturn(firebaseUid);
+        User creator = new User();
+        creator.setId(1L);
+        creator.setFirebaseUid(firebaseUid);
+        when(userRepository.findByFirebaseUid(firebaseUid)).thenReturn(Optional.of(creator));
+        CreateGoalRequest request = new CreateGoalRequest();
+        request.setTitle("Test Goal");
+        request.setPublic(false);
+        Goal savedGoal = new Goal();
+        savedGoal.setId(1L);
+        when(goalRepository.save(any(Goal.class))).thenAnswer(invocation -> {
+            Goal g = invocation.getArgument(0);
+            assertFalse(g.getPublic());
+            return savedGoal;
+        });
+        ResponseEntity<?> response = goalController.createGoal(request, authentication);
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+    }
+
+    @Test
+    void createGoal_shouldDefaultIsPublicTrue_whenPublicNull() {
+        String firebaseUid = "firebase-uid";
+        when(authentication.getName()).thenReturn(firebaseUid);
+        User creator = new User();
+        creator.setId(1L);
+        creator.setFirebaseUid(firebaseUid);
+        when(userRepository.findByFirebaseUid(firebaseUid)).thenReturn(Optional.of(creator));
+        CreateGoalRequest request = new CreateGoalRequest();
+        request.setTitle("Test Goal");
+        request.setPublic(null);
+        Goal savedGoal = new Goal();
+        savedGoal.setId(1L);
+        when(goalRepository.save(any(Goal.class))).thenAnswer(invocation -> {
+            Goal g = invocation.getArgument(0);
+            assertTrue(g.getPublic());
+            return savedGoal;
+        });
+        ResponseEntity<?> response = goalController.createGoal(request, authentication);
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+    }
+
+    @Test
+    void getPublicGoals_shouldReturnOnlyPublicGoals() {
+        Goal publicGoal = new Goal();
+        publicGoal.setId(1L);
+        publicGoal.setTitle("Public Goal");
+        publicGoal.setPublic(true);
+        Goal privateGoal = new Goal();
+        privateGoal.setId(2L);
+        privateGoal.setTitle("Private Goal");
+        privateGoal.setPublic(false);
+        when(goalRepository.findByIsPublicTrue()).thenReturn(List.of(publicGoal));
+        ResponseEntity<?> response = goalController.getPublicGoals(true, 10);
+        List<?> goals = (List<?>) response.getBody();
+        assertEquals(1, goals.size());
+        assertEquals("Public Goal", ((Goal) goals.get(0)).getTitle());
     }
 }

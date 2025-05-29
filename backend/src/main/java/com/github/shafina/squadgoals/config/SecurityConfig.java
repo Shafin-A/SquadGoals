@@ -38,9 +38,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.GET, "/api/goals/**").permitAll()
                         .requestMatchers("/public/**").permitAll()
-                        .anyRequest().authenticated()
-                )
-                .addFilterBefore(firebaseTokenFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
+                        .anyRequest().authenticated())
+                .exceptionHandling(eh -> eh
+                        .authenticationEntryPoint(
+                                (request, response, authException) -> response.sendError(401, "Unauthorized")))
+                .addFilterBefore(firebaseTokenFilter,
+                        org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
 
         return httpSecurity.build();
     }
