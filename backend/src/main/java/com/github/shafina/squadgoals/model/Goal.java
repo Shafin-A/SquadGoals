@@ -50,6 +50,9 @@ public class Goal implements Serializable {
 
     private String timezone;
 
+    @Column(name = "is_public")
+    private Boolean isPublic;
+
     @Column(updatable = false, name = "created_at")
     @CreationTimestamp(source = SourceType.DB)
     private LocalDateTime createdAt;
@@ -144,5 +147,13 @@ public class Goal implements Serializable {
 
     public void setStartAt(LocalDateTime startAt) {
         this.startAt = startAt;
+    }
+
+    public Boolean getPublic() {
+        return isPublic;
+    }
+
+    public void setPublic(Boolean isPublic) {
+        this.isPublic = isPublic;
     }
 }

@@ -26,6 +26,8 @@ public class CreateGoalRequest {
 
     private Set<Long> squadUserIds;
 
+    private Boolean isPublic;
+
     public String getTitle() {
         return title;
     }
@@ -80,5 +82,13 @@ public class CreateGoalRequest {
 
     public void setSquadUserIds(Set<Long> squadUserIds) {
         this.squadUserIds = squadUserIds;
+    }
+
+    public Boolean getPublic() {
+        return isPublic;
+    }
+
+    public void setPublic(Boolean isPublic) {
+        this.isPublic = isPublic;
     }
 }

@@ -11,13 +11,11 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -38,7 +36,7 @@ public class GoalController {
 
     @PostMapping
     public ResponseEntity<?> createGoal(@Valid @RequestBody CreateGoalRequest createGoalRequest,
-                                        Authentication authentication) {
+            Authentication authentication) {
         String firebaseUid = authentication.getName();
 
         User creator = userRepository.findByFirebaseUid(firebaseUid)
@@ -76,8 +74,31 @@ public class GoalController {
         squadUsers.add(goal.getCreatedBy());
         goal.setSquad(squadUsers);
 
+        Boolean isPublic = Optional.ofNullable(createGoalRequest.getPublic()).orElse(true);
+        goal.setPublic(isPublic);
+
         Goal savedGoal = goalRepository.save(goal);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(savedGoal);
+    }
+
+    @GetMapping
+    public ResponseEntity<?> getPublicGoals(
+            @RequestParam(defaultValue = "true") boolean recent,
+            @RequestParam(defaultValue = "10") int limit) {
+        List<Goal> goals = goalRepository.findByIsPublicTrue();
+
+        if (recent) {
+            goals = goals.stream()
+                    .sorted((g1, g2) -> g2.getCreatedAt().compareTo(g1.getCreatedAt()))
+                    .limit(limit)
+                    .collect(Collectors.toList());
+        } else {
+            goals = goals.stream()
+                    .limit(limit)
+                    .collect(Collectors.toList());
+        }
+
+        return ResponseEntity.ok(goals);
     }
 }
