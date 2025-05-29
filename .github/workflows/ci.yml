@@ -40,6 +40,7 @@ jobs:
   frontend:
     name: Frontend Build & Test
     runs-on: ubuntu-latest
+    env: Dev
     defaults:
       run:
         working-directory: frontend
