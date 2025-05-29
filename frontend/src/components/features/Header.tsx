@@ -4,7 +4,6 @@ import Image from "next/image";
 import { ModeToggle } from "@/components/features/ModeToggle";
 import Link from "next/link";
 import { Button } from "../ui/button";
-import { useState } from "react";
 import { Menu } from "lucide-react";
 import {
   DropdownMenu,
