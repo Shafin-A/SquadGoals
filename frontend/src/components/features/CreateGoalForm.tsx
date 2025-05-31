@@ -66,8 +66,12 @@ export default function CreateGoalForm() {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="space-y-8 max-w-3xl mx-auto py-10"
+        className="w-full space-y-8 max-w-3xl mx-auto"
       >
+        <h1 className="text-3xl font-bold tracking-tight">Create a Goal</h1>
+        <p className="text-muted-foreground">
+          Embark on a new goal with your squad (or alone)!
+        </p>
         <FormField
           control={form.control}
           name="title"
@@ -116,7 +120,7 @@ export default function CreateGoalForm() {
                 />
               </FormControl>
               <FormDescription>
-                These will be the tags your goal will have.
+                These will be the tags your goal will have. (Optional)
               </FormDescription>
               <FormMessage />
             </FormItem>
