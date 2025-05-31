@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ControllerRenderProps } from "react-hook-form";
+import { ControllerRenderProps, FieldValues, Path } from "react-hook-form";
 import {
   Popover,
   PopoverTrigger,
@@ -28,17 +28,19 @@ type User = {
   img?: string;
 };
 
-type UserMultiSelectAsyncProps = {
-  field: ControllerRenderProps<any, any>;
+type UserMultiSelectAsyncProps<
+  TFieldValues extends FieldValues,
+  TName extends Path<TFieldValues>
+> = {
+  field: ControllerRenderProps<TFieldValues, TName>;
   loadUsers: (query: string) => Promise<User[]>;
   error?: string;
 };
 
-export function UserMultiSelectAsync({
-  field,
-  loadUsers,
-  error,
-}: UserMultiSelectAsyncProps) {
+export function UserMultiSelectAsync<
+  TFieldValues extends FieldValues,
+  TName extends Path<TFieldValues>
+>({ field, loadUsers, error }: UserMultiSelectAsyncProps<TFieldValues, TName>) {
   const selected = field.value || [];
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -66,9 +68,6 @@ export function UserMultiSelectAsync({
   const handleRemove = (id: string) => {
     field.onChange(selected.filter((u: User) => u.id !== id));
   };
-
-  console.log("query:", query);
-  console.log("user options:", options);
 
   return (
     <div className="space-y-2">

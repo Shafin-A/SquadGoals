@@ -28,10 +28,6 @@ export const UserSearchList = ({
   selected,
   handleSelect,
 }: UserSearchListProps) => {
-  console.log(options, "options in UserSearchList");
-  console.log(
-    options.filter((u) => !selected.some((s: User) => s.id === u.id))
-  );
   return (
     <Command>
       <CommandInput
