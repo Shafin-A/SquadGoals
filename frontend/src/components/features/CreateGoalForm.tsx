@@ -206,7 +206,7 @@ export default function CreateGoalForm() {
                 <UserMultiSelectAsync
                   id="squad-select"
                   field={field}
-                  loadUsers={async (query) => {
+                  loadUsers={async () => {
                     return [
                       { id: "1", name: "John Doe", img: "" },
                       { id: "2", name: "John Dose", img: "" },
@@ -216,7 +216,7 @@ export default function CreateGoalForm() {
                 />
               </FormControl>
               <FormDescription>
-                These users will be asked to be part of your goal's squad.
+                These users will be asked to be part of your goal&apos;s squad.
                 (Optional)
               </FormDescription>
               <FormMessage />
