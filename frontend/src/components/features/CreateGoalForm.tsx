@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DateTimePicker } from "@/components/ui/datetime-picker";
+import { FREQUENCY } from "@/lib/constants";
 
 const formSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -135,10 +136,18 @@ export default function CreateGoalForm() {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="DAILY">DAILY</SelectItem>
-                  <SelectItem value="WEEKLY">WEEKLY</SelectItem>
-                  <SelectItem value="MONTHLY">MONTHLY</SelectItem>
-                  <SelectItem value="YEARLY">YEARLY</SelectItem>
+                  <SelectItem value={FREQUENCY.DAILY}>
+                    {FREQUENCY.DAILY}
+                  </SelectItem>
+                  <SelectItem value={FREQUENCY.WEEKLY}>
+                    {FREQUENCY.WEEKLY}
+                  </SelectItem>
+                  <SelectItem value={FREQUENCY.MONTHLY}>
+                    {FREQUENCY.MONTHLY}
+                  </SelectItem>
+                  <SelectItem value={FREQUENCY.YEARLY}>
+                    {FREQUENCY.YEARLY}
+                  </SelectItem>
                 </SelectContent>
               </Select>
               <FormDescription>
