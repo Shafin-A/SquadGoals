@@ -29,7 +29,7 @@ export const UserSearchList = ({
   handleSelect,
 }: UserSearchListProps) => {
   return (
-    <Command>
+    <Command className="w-full">
       <CommandInput
         placeholder="Search users..."
         value={query}

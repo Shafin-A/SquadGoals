@@ -15,12 +15,14 @@ import {
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 type DateTimePickerProps = {
+  id?: string;
   value: Date;
   onChange: (date: Date) => void;
   disablePreviousDates?: boolean;
 };
 
 export const DateTimePicker = ({
+  id,
   value,
   onChange,
   disablePreviousDates = true,
@@ -68,6 +70,7 @@ export const DateTimePicker = ({
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
         <Button
+          id={id}
           variant="outline"
           className={cn(
             "w-full justify-start text-left font-normal",

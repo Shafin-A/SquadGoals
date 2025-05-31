@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { DateTimePicker } from "@/components/ui/datetime-picker";
 import { FREQUENCY } from "@/lib/constants";
+import { UserMultiSelectAsync } from "./UserMultiSelectAsync";
 
 const formSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -45,6 +46,10 @@ const formSchema = z.object({
     .refine((data) => data > new Date(), {
       message: "Start date and time must be in the future",
     }),
+  squadUserIds: z
+    .array(z.string().min(1))
+    .max(10, "Squads can only have a maximum of 10 members")
+    .optional(),
 });
 
 export default function CreateGoalForm() {
@@ -132,10 +137,18 @@ export default function CreateGoalForm() {
           name="frequency"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Frequency</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormLabel htmlFor="frequency-select">Frequency</FormLabel>
+              <Select
+                name="frequency"
+                onValueChange={field.onChange}
+                defaultValue={field.value}
+              >
                 <FormControl>
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger
+                    id="frequency-select"
+                    name="frequency"
+                    className="w-full"
+                  >
                     <SelectValue placeholder="Select a frequency for your goal..." />
                   </SelectTrigger>
                 </FormControl>
@@ -167,10 +180,44 @@ export default function CreateGoalForm() {
           name="startAt"
           render={({ field }) => (
             <FormItem className="flex flex-col">
-              <FormLabel>Goal Start Date and Time</FormLabel>
-              <DateTimePicker value={field.value} onChange={field.onChange} />
+              <FormLabel htmlFor="start-date-picker">Start Date</FormLabel>
+              <FormControl>
+                <DateTimePicker
+                  id="start-date-picker"
+                  value={field.value}
+                  onChange={field.onChange}
+                />
+              </FormControl>
               <FormDescription>
                 This will be the date and time your goal starts at.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="squadUserIds"
+          render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel htmlFor="squad-select">Squad Members</FormLabel>
+              <FormControl>
+                <UserMultiSelectAsync
+                  id="squad-select"
+                  field={field}
+                  loadUsers={async (query) => {
+                    return [
+                      { id: "1", name: "John Doe", img: "" },
+                      { id: "2", name: "John Dose", img: "" },
+                      { id: "3", name: "John Doae", img: "" },
+                    ];
+                  }}
+                />
+              </FormControl>
+              <FormDescription>
+                These users will be asked to be part of your goal's squad.
+                (Optional)
               </FormDescription>
               <FormMessage />
             </FormItem>

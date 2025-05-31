@@ -32,6 +32,7 @@ type UserMultiSelectAsyncProps<
   TFieldValues extends FieldValues,
   TName extends Path<TFieldValues>
 > = {
+  id?: string;
   field: ControllerRenderProps<TFieldValues, TName>;
   loadUsers: (query: string) => Promise<User[]>;
   error?: string;
@@ -40,8 +41,14 @@ type UserMultiSelectAsyncProps<
 export function UserMultiSelectAsync<
   TFieldValues extends FieldValues,
   TName extends Path<TFieldValues>
->({ field, loadUsers, error }: UserMultiSelectAsyncProps<TFieldValues, TName>) {
-  const selected = field.value || [];
+>({
+  id,
+  field,
+  loadUsers,
+  error,
+}: UserMultiSelectAsyncProps<TFieldValues, TName>) {
+  const selectedIds: string[] = field.value || [];
+
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [options, setOptions] = useState<User[]>([]);
@@ -58,15 +65,19 @@ export function UserMultiSelectAsync<
       .finally(() => setLoading(false));
   }, [debouncedQuery, loadUsers]);
 
+  const selectedUsers: User[] = selectedIds
+    .map((id) => options.find((u) => u.id === id))
+    .filter(Boolean) as User[];
+
   const handleSelect = (user: User) => {
-    if (!selected.some((u: User) => u.id === user.id)) {
-      field.onChange([...selected, user]);
+    if (!selectedIds.includes(user.id)) {
+      field.onChange([...selectedIds, user.id]);
     }
     setOpen(false);
   };
 
   const handleRemove = (id: string) => {
-    field.onChange(selected.filter((u: User) => u.id !== id));
+    field.onChange(selectedIds.filter((uid) => uid !== id));
   };
 
   return (
@@ -75,8 +86,9 @@ export function UserMultiSelectAsync<
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <Button
+              id={id}
               variant="outline"
-              className={`w-[150px] justify-start ${
+              className={`w-full justify-start ${
                 error ? "border-destructive" : ""
               }`}
               onClick={() => setOpen(true)}
@@ -84,13 +96,13 @@ export function UserMultiSelectAsync<
               + Add User
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-[200px] p-0">
+          <PopoverContent className="min-w-[606px] p-0">
             <UserSearchList
               query={query}
               setQuery={setQuery}
               loading={loading}
               options={options}
-              selected={selected}
+              selected={selectedUsers}
               handleSelect={handleSelect}
             />
           </PopoverContent>
@@ -99,8 +111,9 @@ export function UserMultiSelectAsync<
         <Drawer open={open} onOpenChange={setOpen}>
           <DrawerTrigger asChild>
             <Button
+              id={id}
               variant="outline"
-              className={`w-[150px] justify-start ${
+              className={`w-full justify-start ${
                 error ? "border-destructive" : ""
               }`}
               onClick={() => setOpen(true)}
@@ -120,7 +133,7 @@ export function UserMultiSelectAsync<
               setQuery={setQuery}
               loading={loading}
               options={options}
-              selected={selected}
+              selected={selectedUsers}
               handleSelect={handleSelect}
             />
           </DrawerContent>
@@ -128,7 +141,7 @@ export function UserMultiSelectAsync<
       )}
       {/* Selected users */}
       <div className="flex flex-wrap gap-2">
-        {selected.map((user: User) => (
+        {selectedUsers.map((user: User) => (
           <div
             key={user.id}
             className="flex items-center px-3 py-1 rounded-full shadow-sm border hover:shadow-md transition-all group bg-muted"
