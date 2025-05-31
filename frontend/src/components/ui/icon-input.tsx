@@ -18,7 +18,7 @@ export type InputProps<T extends IconComponent = IconComponent> =
       : never;
   };
 
-const InputIcon = React.forwardRef<HTMLInputElement, InputProps>(
+const IconInput = React.forwardRef<HTMLInputElement, InputProps>(
   (
     {
       className,
@@ -68,6 +68,6 @@ const InputIcon = React.forwardRef<HTMLInputElement, InputProps>(
     );
   }
 );
-InputIcon.displayName = "Input";
+IconInput.displayName = "Input";
 
-export { InputIcon };
+export { IconInput };

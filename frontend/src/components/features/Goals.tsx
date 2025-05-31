@@ -1,11 +1,12 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { InputIcon } from "@/components/ui/input-icon";
+import { IconInput } from "@/components/ui/icon-input";
 import { SearchIcon } from "lucide-react";
 import { Form, FormField, FormItem, FormControl } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { auth } from "@/firebase";
+import Link from "next/link";
 
 export const Goals = () => {
   const form = useForm({
@@ -22,7 +23,9 @@ export const Goals = () => {
     <div className="w-full max-w-2xl rounded-2xl border bg-card shadow-lg p-8 flex flex-col gap-8">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-3xl font-bold tracking-tight">Goals</h1>
-        <Button variant="default">+ Create New Goal</Button>
+        <Button variant="default">
+          <Link href="/goals/new">+ Create New Goal</Link>
+        </Button>
       </div>
 
       <Form {...form}>
@@ -36,7 +39,7 @@ export const Goals = () => {
             render={({ field }) => (
               <FormItem className="w-full">
                 <FormControl>
-                  <InputIcon
+                  <IconInput
                     className="w-full"
                     type="search"
                     icon={SearchIcon}
