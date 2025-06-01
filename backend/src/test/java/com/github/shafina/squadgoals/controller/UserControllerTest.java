@@ -1,6 +1,7 @@
 package com.github.shafina.squadgoals.controller;
 
 import com.github.shafina.squadgoals.dto.CreateUserRequest;
+import com.github.shafina.squadgoals.dto.UserSearchDTO;
 import com.github.shafina.squadgoals.model.User;
 import com.github.shafina.squadgoals.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -10,9 +11,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -80,4 +81,81 @@ class UserControllerTest {
         assertEquals("Europe/London", returnedUser.getTimezone());
         assertEquals(firebaseUid, returnedUser.getFirebaseUid());
     }
+
+    @Test
+    void searchUsers_shouldReturnBadRequest_whenLimitIsLessThanOne() {
+        ResponseEntity<List<UserSearchDTO>> response = userController.searchUsers("test", 0);
+        assertEquals(400, response.getStatusCode().value());
+        assertNull(response.getBody());
+    }
+
+    @Test
+    void searchUsers_shouldReturnEmptyList_whenNoUsersFound() {
+        when(userRepository.findByNameContainingIgnoreCaseOrEmailContainingIgnoreCase("notfound", "notfound"))
+                .thenReturn(List.of());
+
+        ResponseEntity<List<UserSearchDTO>> response = userController.searchUsers("notfound", 5);
+
+        assertEquals(200, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+        assertEquals(0, response.getBody().size());
+    }
+
+    @Test
+    void searchUsers_shouldReturnLimitedResults_whenMoreUsersFoundThanLimit() {
+        User user1 = new User();
+        user1.setId(1L);
+        user1.setName("Alice");
+        user1.setEmail("alice@example.com");
+
+        User user2 = new User();
+        user2.setId(2L);
+        user2.setName("Bob");
+        user2.setEmail("bob@example.com");
+
+        User user3 = new User();
+        user3.setId(3L);
+        user3.setName("Charlie");
+        user3.setEmail("charlie@example.com");
+
+        List<User> users = List.of(user1, user2, user3);
+
+        when(userRepository.findByNameContainingIgnoreCaseOrEmailContainingIgnoreCase("a", "a"))
+                .thenReturn(users);
+
+        ResponseEntity<List<UserSearchDTO>> response = userController.searchUsers("a", 2);
+
+        assertEquals(200, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+        assertEquals(2, response.getBody().size());
+        assertEquals("Alice", response.getBody().get(0).name());
+        assertEquals("Bob", response.getBody().get(1).name());
+    }
+
+    @Test
+    void searchUsers_shouldReturnAllResults_whenUsersFoundLessThanLimit() {
+        User user1 = new User();
+        user1.setId(1L);
+        user1.setName("Alice");
+        user1.setEmail("alice@example.com");
+
+        User user2 = new User();
+        user2.setId(2L);
+        user2.setName("Bob");
+        user2.setEmail("bob@example.com");
+
+        List<User> users = List.of(user1, user2);
+
+        when(userRepository.findByNameContainingIgnoreCaseOrEmailContainingIgnoreCase("b", "b"))
+                .thenReturn(users);
+
+        ResponseEntity<List<UserSearchDTO>> response = userController.searchUsers("b", 5);
+
+        assertEquals(200, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+        assertEquals(2, response.getBody().size());
+        assertEquals("Alice", response.getBody().get(0).name());
+        assertEquals("Bob", response.getBody().get(1).name());
+    }
+
 }
