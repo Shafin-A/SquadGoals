@@ -24,11 +24,10 @@ import {
 } from "@/components/ui/select";
 import { DateTimePicker } from "@/components/ui/datetime-picker";
 import { FREQUENCY, VISIBILITY } from "@/lib/constants";
-import { UserMultiSelectAsync } from "./UserMultiSelectAsync";
+import { UserMultiSelectAsync } from "@/components/features/UserMultiSelectAsync";
 import { auth } from "@/firebase";
 import { useState } from "react";
-import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
-import { Label } from "../ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const formSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -74,26 +73,46 @@ export default function CreateGoalForm() {
   const [loading, setLoading] = useState(false);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    console.log("Values", values);
-    // try {
-    //   const user = auth.currentUser;
+    try {
+      setLoading(true);
+      const user = auth.currentUser;
 
-    //   if (!user) {
-    //     throw new Error("User is not authenticated");
-    //   }
+      if (!user) {
+        throw new Error("Error: User is not authenticated");
+      }
 
-    //   await fetch("/api/goals", {
-    //     method: "POST",
-    //     headers: {
-    //       "Content-Type": "application/json",
-    //       Authorization: `Bearer ${user.getIdToken()}`,
-    //     },
-    //   });
-    // } catch (error) {
-    // } finally {
-    //   setLoading(false);
-    //   form.reset();
-    // }
+      const createGoalBody = {
+        title: values.title,
+        description: values.description || "",
+        frequency: values.frequency,
+        tagNames: values.tags || [],
+        startAt: values.startAt,
+        squadUserIds: values.squadUserIds || [],
+        isPublic: values.visibility === VISIBILITY.PUBLIC,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      };
+
+      const idToken = await user.getIdToken();
+
+      await fetch("http://localhost:8080/api/goals", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify(createGoalBody),
+      });
+    } catch (error) {
+      form.setError("root", {
+        type: "server",
+        message:
+          error instanceof Error
+            ? error.message
+            : "An unexpected error occurred.",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -128,7 +147,7 @@ export default function CreateGoalForm() {
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Title</FormLabel>
+              <FormLabel>Description</FormLabel>
               <FormControl>
                 <Input placeholder="Description..." type="text" {...field} />
               </FormControl>
@@ -302,7 +321,13 @@ export default function CreateGoalForm() {
           )}
         />
 
-        <Button type="submit">Submit</Button>
+        <Button type="submit">{loading ? "Loading" : "Create"}</Button>
+
+        {form.formState.errors.root && (
+          <div className="text-destructive text-sm -mt-4">
+            {form.formState.errors.root.message}
+          </div>
+        )}
       </form>
     </Form>
   );
