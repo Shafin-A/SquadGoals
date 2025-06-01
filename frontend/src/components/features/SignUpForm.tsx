@@ -70,10 +70,13 @@ export function SignUpForm({
       const idToken = await user.getIdToken();
       console.log("ID Token:", idToken);
 
+      const now = new Date();
+
       const profile = {
         name: name,
         email: email,
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        createdAt: now,
       };
 
       await fetch("http://localhost:8080/api/users", {
