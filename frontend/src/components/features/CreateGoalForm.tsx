@@ -23,13 +23,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DateTimePicker } from "@/components/ui/datetime-picker";
-import { FREQUENCY } from "@/lib/constants";
+import { FREQUENCY, VISIBILITY } from "@/lib/constants";
 import { UserMultiSelectAsync } from "./UserMultiSelectAsync";
+import { auth } from "@/firebase";
+import { useState } from "react";
+import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
+import { Label } from "../ui/label";
 
 const formSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().optional(),
-  frequency: z.string(),
+  frequency: z.nativeEnum(FREQUENCY),
   tags: z
     .array(z.string().min(1))
     .max(10, "Tags can only have a maximum of 10 items")
@@ -50,6 +54,7 @@ const formSchema = z.object({
     .array(z.string().min(1))
     .max(10, "Squads can only have a maximum of 10 members")
     .optional(),
+  visibility: z.nativeEnum(VISIBILITY),
 });
 
 export default function CreateGoalForm() {
@@ -58,14 +63,38 @@ export default function CreateGoalForm() {
     defaultValues: {
       title: "",
       description: "",
-      frequency: "DAILY",
+      frequency: FREQUENCY.DAILY,
       tags: [],
+      startAt: new Date(),
+      squadUserIds: [],
+      visibility: VISIBILITY.PUBLIC,
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  const [loading, setLoading] = useState(false);
+
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     console.log("Values", values);
-  }
+    // try {
+    //   const user = auth.currentUser;
+
+    //   if (!user) {
+    //     throw new Error("User is not authenticated");
+    //   }
+
+    //   await fetch("/api/goals", {
+    //     method: "POST",
+    //     headers: {
+    //       "Content-Type": "application/json",
+    //       Authorization: `Bearer ${user.getIdToken()}`,
+    //     },
+    //   });
+    // } catch (error) {
+    // } finally {
+    //   setLoading(false);
+    //   form.reset();
+    // }
+  };
 
   return (
     <Form {...form}>
@@ -218,6 +247,55 @@ export default function CreateGoalForm() {
               <FormDescription>
                 These users will be asked to be part of your goal&apos;s squad.
                 (Optional)
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="visibility"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel asChild>
+                <legend>Visibility</legend>
+              </FormLabel>
+              <FormControl>
+                <RadioGroup
+                  name="visibility"
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  className="flex"
+                >
+                  <FormItem className="flex items-center gap-3">
+                    <FormControl>
+                      <RadioGroupItem
+                        id="visibility-public"
+                        value={VISIBILITY.PUBLIC}
+                      />
+                    </FormControl>
+                    <FormLabel htmlFor="visibility-public">
+                      {VISIBILITY.PUBLIC}
+                    </FormLabel>
+                  </FormItem>
+
+                  <FormItem className="flex items-center gap-3">
+                    <FormControl>
+                      <RadioGroupItem
+                        id="visibility-private"
+                        value={VISIBILITY.PRIVATE}
+                      />
+                    </FormControl>
+                    <FormLabel htmlFor="visibility-private">
+                      {VISIBILITY.PRIVATE}
+                    </FormLabel>
+                  </FormItem>
+                </RadioGroup>
+              </FormControl>
+              <FormDescription>
+                Public goals are visible to everyone. Private goals are only
+                visible to you and squad members.
               </FormDescription>
               <FormMessage />
             </FormItem>

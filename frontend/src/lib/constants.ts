@@ -4,3 +4,8 @@ export enum FREQUENCY {
   MONTHLY = "MONTHLY",
   YEARLY = "YEARLY",
 }
+
+export const VISIBILITY = {
+  PUBLIC: "Public",
+  PRIVATE: "Private",
+};

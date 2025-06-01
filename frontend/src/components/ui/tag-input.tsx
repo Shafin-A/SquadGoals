@@ -85,12 +85,12 @@ const TagInput = forwardRef<HTMLInputElement, TagInputProps>((props, ref) => {
   return (
     <div className={cn("w-full", className)}>
       {tagsPosition === "top" && (
-        <div className="flex flex-wrap items-center gap-2 mb-2">
+        <div className="flex flex-wrap items-center gap-2">
           {value.map((item) => (
             <Badge
               key={item}
               variant="secondary"
-              className="flex items-center gap-1 px-2 py-1 rounded-full"
+              className="flex items-center gap-1 px-2 py-1 rounded-full mb-2"
             >
               <span className="truncate max-w-[100px]">{item}</span>
               <Button
@@ -131,12 +131,12 @@ const TagInput = forwardRef<HTMLInputElement, TagInputProps>((props, ref) => {
         ref={ref}
       />
       {tagsPosition === "bottom" && (
-        <div className="flex flex-wrap items-center gap-2 mt-2">
+        <div className="flex flex-wrap items-center gap-2">
           {value.map((item) => (
             <Badge
               key={item}
               variant="secondary"
-              className="flex items-center gap-1 px-2 py-1 rounded-full"
+              className="flex items-center gap-1 px-2 py-1 rounded-full mt-2"
             >
               <span className="truncate max-w-[100px]">{item}</span>
               <Button

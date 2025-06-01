@@ -81,7 +81,7 @@ export function UserMultiSelectAsync<
   };
 
   return (
-    <div className="space-y-2">
+    <div>
       {isDesktop ? (
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
