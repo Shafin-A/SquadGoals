@@ -1,16 +1,20 @@
 package com.github.shafina.squadgoals.controller;
 
 import com.github.shafina.squadgoals.dto.CreateGoalRequest;
+import com.github.shafina.squadgoals.enums.Status;
 import com.github.shafina.squadgoals.model.Goal;
+import com.github.shafina.squadgoals.model.Invitation;
 import com.github.shafina.squadgoals.model.Tag;
 import com.github.shafina.squadgoals.model.User;
 import com.github.shafina.squadgoals.repository.GoalRepository;
+import com.github.shafina.squadgoals.repository.InvitationRepository;
 import com.github.shafina.squadgoals.repository.TagRepository;
 import com.github.shafina.squadgoals.repository.UserRepository;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -27,16 +31,20 @@ public class GoalController {
     private final GoalRepository goalRepository;
     private final UserRepository userRepository;
     private final TagRepository tagRepository;
+    private final InvitationRepository invitationRepository;
 
-    public GoalController(GoalRepository goalRepository, UserRepository userRepository, TagRepository tagRepository) {
+    public GoalController(GoalRepository goalRepository, UserRepository userRepository, TagRepository tagRepository,
+            InvitationRepository invitationRepository) {
         this.goalRepository = goalRepository;
         this.userRepository = userRepository;
         this.tagRepository = tagRepository;
+        this.invitationRepository = invitationRepository;
     }
 
     @PostMapping
+    @Transactional
     public ResponseEntity<?> createGoal(@Valid @RequestBody CreateGoalRequest createGoalRequest,
-                                        Authentication authentication) {
+            Authentication authentication) {
         String firebaseUid = authentication.getName();
 
         User creator = userRepository.findByFirebaseUid(firebaseUid)
@@ -63,21 +71,27 @@ public class GoalController {
 
         goal.setTags(tagEntities);
 
-        Set<User> squadUsers = Optional.ofNullable(createGoalRequest.getSquadUserIds())
-                .orElse(Collections.emptySet())
-                .stream()
-                .map(userId -> userRepository.findById(userId)
-                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                                "User not found with ID: " + userId)))
-                .collect(Collectors.toSet());
-
-        squadUsers.add(goal.getCreatedBy());
-        goal.setSquad(squadUsers);
-
         Boolean isPublic = Optional.ofNullable(createGoalRequest.getPublic()).orElse(true);
         goal.setPublic(isPublic);
 
+        goal.setSquad(Set.of(creator));
         Goal savedGoal = goalRepository.save(goal);
+
+        Optional.ofNullable(createGoalRequest.getSquadUserIds())
+                .orElse(Collections.emptySet())
+                .stream()
+                .filter(userId -> !userId.equals(creator.getId()))
+                .forEach(userId -> {
+                    User invitedUser = userRepository.findById(userId)
+                            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                                    "User not found with ID: " + userId));
+                    Invitation invitation = new Invitation();
+                    invitation.setGoal(savedGoal);
+                    invitation.setInvitedUser(invitedUser);
+                    invitation.setInviter(creator);
+                    invitation.setStatus(Status.PENDING);
+                    invitationRepository.save(invitation);
+                });
 
         return ResponseEntity.status(HttpStatus.CREATED).body(savedGoal);
     }
