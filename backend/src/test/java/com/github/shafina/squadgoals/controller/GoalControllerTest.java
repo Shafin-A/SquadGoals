@@ -6,6 +6,7 @@ import com.github.shafina.squadgoals.model.Goal;
 import com.github.shafina.squadgoals.model.Tag;
 import com.github.shafina.squadgoals.model.User;
 import com.github.shafina.squadgoals.repository.GoalRepository;
+import com.github.shafina.squadgoals.repository.InvitationRepository;
 import com.github.shafina.squadgoals.repository.TagRepository;
 import com.github.shafina.squadgoals.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,6 +29,7 @@ class GoalControllerTest {
     private GoalRepository goalRepository;
     private UserRepository userRepository;
     private TagRepository tagRepository;
+    private InvitationRepository invitationRepository;
     private GoalController goalController;
     private Authentication authentication;
 
@@ -36,8 +38,9 @@ class GoalControllerTest {
         goalRepository = mock(GoalRepository.class);
         userRepository = mock(UserRepository.class);
         tagRepository = mock(TagRepository.class);
+        invitationRepository = mock(InvitationRepository.class);
         authentication = mock(Authentication.class);
-        goalController = new GoalController(goalRepository, userRepository, tagRepository);
+        goalController = new GoalController(goalRepository, userRepository, tagRepository, invitationRepository);
     }
 
     @Test
@@ -82,6 +85,10 @@ class GoalControllerTest {
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertEquals(savedGoal, response.getBody());
+        verify(invitationRepository, times(1))
+                .save(argThat(invitation -> invitation.getInvitedUser().equals(squadUser) &&
+                        invitation.getInviter().equals(creator) &&
+                        invitation.getGoal().equals(savedGoal)));
     }
 
     @Test
@@ -131,6 +138,10 @@ class GoalControllerTest {
         assertEquals(savedGoal, response.getBody());
         verify(tagRepository, times(1)).save(argThat(tag -> tag.getName().equals("guitar")));
         verify(tagRepository, times(1)).save(argThat(tag -> tag.getName().equals("music")));
+        verify(invitationRepository, times(1))
+                .save(argThat(invitation -> invitation.getInvitedUser().equals(squadUser) &&
+                        invitation.getInviter().equals(creator) &&
+                        invitation.getGoal().equals(savedGoal)));
     }
 
     @Test

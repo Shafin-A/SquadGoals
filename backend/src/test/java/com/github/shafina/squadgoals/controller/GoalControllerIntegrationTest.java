@@ -8,6 +8,7 @@ import com.github.shafina.squadgoals.model.Goal;
 import com.github.shafina.squadgoals.model.Tag;
 import com.github.shafina.squadgoals.model.User;
 import com.github.shafina.squadgoals.repository.GoalRepository;
+import com.github.shafina.squadgoals.repository.InvitationRepository;
 import com.github.shafina.squadgoals.repository.TagRepository;
 import com.github.shafina.squadgoals.repository.UserRepository;
 import com.github.shafina.squadgoals.security.FirebaseAuthProvider;
@@ -52,6 +53,9 @@ public class GoalControllerIntegrationTest {
 
     @MockitoBean
     private TagRepository tagRepository;
+
+    @MockitoBean
+    private InvitationRepository invitationRepository;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -116,6 +120,18 @@ public class GoalControllerIntegrationTest {
                 .andExpect(jsonPath("$.description").value("Read 30 minutes daily"))
                 .andExpect(jsonPath("$.timezone").value("America/New_York"))
                 .andExpect(jsonPath("$.id").value(100L));
+
+        verify(invitationRepository, times(1)).save(argThat(invitation ->
+                invitation.getInvitedUser().equals(squadUser1) &&
+                invitation.getInviter().equals(creator) &&
+                invitation.getGoal().equals(savedGoal)
+        ));
+
+        verify(invitationRepository, times(1)).save(argThat(invitation ->
+                invitation.getInvitedUser().equals(squadUser2) &&
+                invitation.getInviter().equals(creator) &&
+                invitation.getGoal().equals(savedGoal)
+        ));
     }
 
     @Test
@@ -180,6 +196,12 @@ public class GoalControllerIntegrationTest {
 
         verify(tagRepository, times(1)).save(argThat(tag -> tag.getName().equals("guitar")));
         verify(tagRepository, times(1)).save(argThat(tag -> tag.getName().equals("music")));
+
+        verify(invitationRepository, times(1)).save(argThat(invitation ->
+                invitation.getInvitedUser().equals(squadUser) &&
+                invitation.getInviter().equals(creator) &&
+                invitation.getGoal().equals(savedGoal)
+        ));
     }
 
     @Test
