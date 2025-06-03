@@ -1,22 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { Frown } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
+import { RecentGoals } from "@/components/features/RecentGoals";
 
 export default function Home() {
-  const [goals, setGoals] = useState<number[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    setLoading(true);
-    setTimeout(() => {
-      setGoals([]);
-      setLoading(false);
-    }, 800);
-  }, []);
-
   return (
     <div className="min-h-screen flex">
       <main className="mx-4 my-10 md:mx-20 md:my-20 w-full">
@@ -48,24 +35,7 @@ export default function Home() {
           <h1 className="text-3xl md:text-4xl font-bold mb-4 text-center lg:text-left">
             Recent Goals Looking For Squad Members
           </h1>
-          {loading ? (
-            <div className="flex justify-center items-center p-8">
-              <span>Loading...</span>
-            </div>
-          ) : goals.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-lg p-8 shadow-inner">
-              <Frown className="w-16 h-16 mb-4" />
-              <p className="text-lg mb-2 text-center">
-                No goals are currently looking for squad members. <br />
-                Be the first to create a goal and find your squad!
-              </p>
-              <Button className="mt-4">Create Goal</Button>
-            </div>
-          ) : (
-            <div className="grid gap-4">
-              {/* actual goals component here... */}
-            </div>
-          )}
+          <RecentGoals />
         </div>
       </main>
     </div>
