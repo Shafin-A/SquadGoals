@@ -1,6 +1,5 @@
 package com.github.shafina.squadgoals.repository;
 
-import com.github.shafina.squadgoals.enums.Frequency;
 import com.github.shafina.squadgoals.model.Goal;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

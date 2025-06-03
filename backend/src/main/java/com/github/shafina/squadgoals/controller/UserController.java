@@ -1,7 +1,7 @@
 package com.github.shafina.squadgoals.controller;
 
 import com.github.shafina.squadgoals.dto.CreateUserRequest;
-import com.github.shafina.squadgoals.dto.UserSearchDTO;
+import com.github.shafina.squadgoals.dto.UserDTO;
 import com.github.shafina.squadgoals.model.User;
 import com.github.shafina.squadgoals.repository.UserRepository;
 import jakarta.validation.Valid;
@@ -23,11 +23,12 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createUser(@Valid @RequestBody CreateUserRequest request, Authentication authentication) {
+    public ResponseEntity<UserDTO> createUser(@Valid @RequestBody CreateUserRequest request,
+            Authentication authentication) {
         String firebaseUid = authentication.getName();
 
         if (userRepository.existsByFirebaseUid(firebaseUid)) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("User already exists.");
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
 
         User user = new User();
@@ -39,11 +40,11 @@ public class UserController {
 
         User savedUser = userRepository.save(user);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
+        return ResponseEntity.status(HttpStatus.CREATED).body(UserDTO.from(savedUser));
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<UserSearchDTO>> searchUsers(
+    public ResponseEntity<List<UserDTO>> searchUsers(
             @RequestParam String query,
             @RequestParam(defaultValue = "10") int limit) {
 
@@ -57,7 +58,7 @@ public class UserController {
                 foundUsers
                         .stream()
                         .limit(limit)
-                        .map(u -> new UserSearchDTO(u.getId(), u.getName(), u.getEmail()))
+                        .map(u -> new UserDTO(u.getId(), u.getName(), u.getEmail(), u.getTimezone()))
                         .toList());
     }
 }

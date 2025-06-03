@@ -1,7 +1,7 @@
 package com.github.shafina.squadgoals.controller;
 
 import com.github.shafina.squadgoals.dto.CreateUserRequest;
-import com.github.shafina.squadgoals.dto.UserSearchDTO;
+import com.github.shafina.squadgoals.dto.UserDTO;
 import com.github.shafina.squadgoals.model.User;
 import com.github.shafina.squadgoals.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,10 +43,9 @@ class UserControllerTest {
         when(authentication.getName()).thenReturn(firebaseUid);
         when(userRepository.existsByFirebaseUid(firebaseUid)).thenReturn(true);
 
-        ResponseEntity<?> response = userController.createUser(request, authentication);
+        ResponseEntity<UserDTO> response = userController.createUser(request, authentication);
 
         assertEquals(409, response.getStatusCode().value());
-        assertEquals("User already exists.", response.getBody());
     }
 
     @Test
@@ -70,21 +69,20 @@ class UserControllerTest {
         when(userRepository.existsByFirebaseUid(firebaseUid)).thenReturn(false);
         when(userRepository.save(Mockito.any(User.class))).thenReturn(savedUser);
 
-        ResponseEntity<?> response = userController.createUser(request, authentication);
+        ResponseEntity<UserDTO> response = userController.createUser(request, authentication);
 
         assertEquals(201, response.getStatusCode().value());
 
-        User returnedUser = (User) response.getBody();
+        UserDTO returnedUser = (UserDTO) response.getBody();
         assertNotNull(returnedUser);
-        assertEquals("Jane Smith", returnedUser.getName());
-        assertEquals("jane@example.com", returnedUser.getEmail());
-        assertEquals("Europe/London", returnedUser.getTimezone());
-        assertEquals(firebaseUid, returnedUser.getFirebaseUid());
+        assertEquals("Jane Smith", returnedUser.name());
+        assertEquals("jane@example.com", returnedUser.email());
+        assertEquals("Europe/London", returnedUser.timezone());
     }
 
     @Test
     void searchUsers_shouldReturnBadRequest_whenLimitIsLessThanOne() {
-        ResponseEntity<List<UserSearchDTO>> response = userController.searchUsers("test", 0);
+        ResponseEntity<List<UserDTO>> response = userController.searchUsers("test", 0);
         assertEquals(400, response.getStatusCode().value());
         assertNull(response.getBody());
     }
@@ -94,7 +92,7 @@ class UserControllerTest {
         when(userRepository.findByNameContainingIgnoreCaseOrEmailContainingIgnoreCase("notfound", "notfound"))
                 .thenReturn(List.of());
 
-        ResponseEntity<List<UserSearchDTO>> response = userController.searchUsers("notfound", 5);
+        ResponseEntity<List<UserDTO>> response = userController.searchUsers("notfound", 5);
 
         assertEquals(200, response.getStatusCode().value());
         assertNotNull(response.getBody());
@@ -123,7 +121,7 @@ class UserControllerTest {
         when(userRepository.findByNameContainingIgnoreCaseOrEmailContainingIgnoreCase("a", "a"))
                 .thenReturn(users);
 
-        ResponseEntity<List<UserSearchDTO>> response = userController.searchUsers("a", 2);
+        ResponseEntity<List<UserDTO>> response = userController.searchUsers("a", 2);
 
         assertEquals(200, response.getStatusCode().value());
         assertNotNull(response.getBody());
@@ -149,7 +147,7 @@ class UserControllerTest {
         when(userRepository.findByNameContainingIgnoreCaseOrEmailContainingIgnoreCase("b", "b"))
                 .thenReturn(users);
 
-        ResponseEntity<List<UserSearchDTO>> response = userController.searchUsers("b", 5);
+        ResponseEntity<List<UserDTO>> response = userController.searchUsers("b", 5);
 
         assertEquals(200, response.getStatusCode().value());
         assertNotNull(response.getBody());
