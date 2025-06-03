@@ -16,10 +16,10 @@ import {
 export default function Header() {
   return (
     <header className="flex items-center justify-between p-4 border-b">
-      <div className="flex items-center space-x-2">
+      <Link href="/" className="flex items-center space-x-2">
         <Image src="/logo.svg" alt="SquadGoals Logo" width={32} height={32} />
         <h1 className="text-2xl font-bold">SquadGoals</h1>
-      </div>
+      </Link>
       {/* Hamburger nav for mobile */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
