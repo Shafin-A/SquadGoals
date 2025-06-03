@@ -34,8 +34,8 @@ export const Goals = () => {
             Goals
           </CardTitle>
           <CardDescription>
-            Find and track your goals, stay accountable <br />
-            and achieve more together.
+            Find and track your goals. <br />
+            Stay accountable and achieve more together.
           </CardDescription>
         </div>
         <Button asChild>
