@@ -28,6 +28,14 @@ import { UserMultiSelectAsync } from "@/components/features/UserMultiSelectAsync
 import { auth } from "@/firebase";
 import { useState } from "react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 const formSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -116,219 +124,230 @@ export default function CreateGoalForm() {
   };
 
   return (
-    <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        className="w-full space-y-8 max-w-3xl mx-auto"
-      >
-        <h1 className="text-3xl font-bold tracking-tight">Create a Goal</h1>
-        <p className="text-muted-foreground">
+    <Card className="w-full max-w-3xl mx-auto">
+      <CardHeader>
+        <CardTitle className="text-3xl font-bold tracking-tight">
+          Create a Goal
+        </CardTitle>
+        <CardDescription>
           Embark on a new goal with your squad (or alone)!
-        </p>
-        <FormField
-          control={form.control}
-          name="title"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Title</FormLabel>
-              <FormControl>
-                <Input placeholder="Title..." type="text" {...field} />
-              </FormControl>
-              <FormDescription>
-                This will be the title of your goal.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Title</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Title..." type="text" {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    This will be the title of your goal.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Description</FormLabel>
-              <FormControl>
-                <Input placeholder="Description..." type="text" {...field} />
-              </FormControl>
-              <FormDescription>
-                This will be the description of your goal. (Optional)
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Description..."
+                      type="text"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    This will be the description of your goal. (Optional)
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <FormField
-          control={form.control}
-          name="tags"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Tags</FormLabel>
-              <FormControl>
-                <TagInput
-                  value={field.value}
-                  onChange={field.onChange}
-                  placeholder="Tags (press Enter or comma)..."
-                />
-              </FormControl>
-              <FormDescription>
-                These will be the tags your goal will have. (Optional)
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            <FormField
+              control={form.control}
+              name="tags"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tags</FormLabel>
+                  <FormControl>
+                    <TagInput
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Tags (press Enter or comma)..."
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    These will be the tags your goal will have. (Optional)
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <FormField
-          control={form.control}
-          name="frequency"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel htmlFor="frequency-select">Frequency</FormLabel>
-              <Select
-                name="frequency"
-                onValueChange={field.onChange}
-                defaultValue={field.value}
-              >
-                <FormControl>
-                  <SelectTrigger
-                    id="frequency-select"
+            <FormField
+              control={form.control}
+              name="frequency"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel htmlFor="frequency-select">Frequency</FormLabel>
+                  <Select
                     name="frequency"
-                    className="w-full"
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
                   >
-                    <SelectValue placeholder="Select a frequency for your goal..." />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value={FREQUENCY.DAILY}>
-                    {FREQUENCY.DAILY}
-                  </SelectItem>
-                  <SelectItem value={FREQUENCY.WEEKLY}>
-                    {FREQUENCY.WEEKLY}
-                  </SelectItem>
-                  <SelectItem value={FREQUENCY.MONTHLY}>
-                    {FREQUENCY.MONTHLY}
-                  </SelectItem>
-                  <SelectItem value={FREQUENCY.YEARLY}>
-                    {FREQUENCY.YEARLY}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-              <FormDescription>
-                This will be the frequency of reminders for your goal.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="startAt"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel htmlFor="start-date-picker">Start Date</FormLabel>
-              <FormControl>
-                <DateTimePicker
-                  id="start-date-picker"
-                  value={field.value}
-                  onChange={field.onChange}
-                />
-              </FormControl>
-              <FormDescription>
-                This will be the date and time your goal starts at.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="squadUserIds"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel htmlFor="squad-select">Squad Members</FormLabel>
-              <FormControl>
-                <UserMultiSelectAsync
-                  id="squad-select"
-                  field={field}
-                  loadUsers={async () => {
-                    return [
-                      { id: "1", name: "John Doe", img: "" },
-                      { id: "2", name: "John Dose", img: "" },
-                      { id: "3", name: "John Doae", img: "" },
-                    ];
-                  }}
-                />
-              </FormControl>
-              <FormDescription>
-                These users will be asked to be part of your goal&apos;s squad.
-                (Optional)
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="visibility"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel asChild>
-                <legend>Visibility</legend>
-              </FormLabel>
-              <FormControl>
-                <RadioGroup
-                  name="visibility"
-                  value={field.value}
-                  onValueChange={field.onChange}
-                  className="flex"
-                >
-                  <FormItem className="flex items-center gap-3">
                     <FormControl>
-                      <RadioGroupItem
-                        id="visibility-public"
-                        value={VISIBILITY.PUBLIC}
-                      />
+                      <SelectTrigger
+                        id="frequency-select"
+                        name="frequency"
+                        className="w-full"
+                      >
+                        <SelectValue placeholder="Select a frequency for your goal..." />
+                      </SelectTrigger>
                     </FormControl>
-                    <FormLabel htmlFor="visibility-public">
-                      {VISIBILITY.PUBLIC}
-                    </FormLabel>
-                  </FormItem>
+                    <SelectContent>
+                      <SelectItem value={FREQUENCY.DAILY}>
+                        {FREQUENCY.DAILY}
+                      </SelectItem>
+                      <SelectItem value={FREQUENCY.WEEKLY}>
+                        {FREQUENCY.WEEKLY}
+                      </SelectItem>
+                      <SelectItem value={FREQUENCY.MONTHLY}>
+                        {FREQUENCY.MONTHLY}
+                      </SelectItem>
+                      <SelectItem value={FREQUENCY.YEARLY}>
+                        {FREQUENCY.YEARLY}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    This will be the frequency of reminders for your goal.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-                  <FormItem className="flex items-center gap-3">
-                    <FormControl>
-                      <RadioGroupItem
-                        id="visibility-private"
-                        value={VISIBILITY.PRIVATE}
-                      />
-                    </FormControl>
-                    <FormLabel htmlFor="visibility-private">
-                      {VISIBILITY.PRIVATE}
-                    </FormLabel>
-                  </FormItem>
-                </RadioGroup>
-              </FormControl>
-              <FormDescription>
-                Public goals are visible to everyone. Private goals are only
-                visible to you and squad members.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            <FormField
+              control={form.control}
+              name="startAt"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel htmlFor="start-date-picker">Start Date</FormLabel>
+                  <FormControl>
+                    <DateTimePicker
+                      id="start-date-picker"
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    This will be the date and time your goal starts at.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <Button type="submit">{loading ? "Loading" : "Create"}</Button>
+            <FormField
+              control={form.control}
+              name="squadUserIds"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel htmlFor="squad-select">Squad Members</FormLabel>
+                  <FormControl>
+                    <UserMultiSelectAsync
+                      id="squad-select"
+                      field={field}
+                      loadUsers={async () => {
+                        return [
+                          { id: "1", name: "John Doe", img: "" },
+                          { id: "2", name: "John Dose", img: "" },
+                          { id: "3", name: "John Doae", img: "" },
+                        ];
+                      }}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    These users will be asked to be part of your goal&apos;s
+                    squad. (Optional)
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
+            <FormField
+              control={form.control}
+              name="visibility"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel asChild>
+                    <legend>Visibility</legend>
+                  </FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      name="visibility"
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      className="flex"
+                    >
+                      <FormItem className="flex items-center gap-3">
+                        <FormControl>
+                          <RadioGroupItem
+                            id="visibility-public"
+                            value={VISIBILITY.PUBLIC}
+                          />
+                        </FormControl>
+                        <FormLabel htmlFor="visibility-public">
+                          {VISIBILITY.PUBLIC}
+                        </FormLabel>
+                      </FormItem>
+
+                      <FormItem className="flex items-center gap-3">
+                        <FormControl>
+                          <RadioGroupItem
+                            id="visibility-private"
+                            value={VISIBILITY.PRIVATE}
+                          />
+                        </FormControl>
+                        <FormLabel htmlFor="visibility-private">
+                          {VISIBILITY.PRIVATE}
+                        </FormLabel>
+                      </FormItem>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormDescription>
+                    Public goals are visible to everyone. Private goals are only
+                    visible to you and squad members.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </form>
+        </Form>
+      </CardContent>
+      <CardFooter className="flex flex-col items-start gap-2">
+        <Button type="submit" form="create-goal-form">
+          {loading ? "Loading" : "Create"}
+        </Button>
         {form.formState.errors.root && (
-          <div className="text-destructive text-sm -mt-4">
+          <div className="text-destructive text-sm">
             {form.formState.errors.root.message}
           </div>
         )}
-      </form>
-    </Form>
+      </CardFooter>
+    </Card>
   );
 }

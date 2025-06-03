@@ -12,9 +12,10 @@ export default function Page() {
             fill
             style={{ objectFit: "contain" }}
             sizes="(max-width: 1024px) 100vw, 50vw"
+            priority={true}
           />
         </div>
-        <div className="w-full max-w-2xl rounded-2xl border bg-card shadow-lg p-8 flex flex-col gap-8">
+        <div className="w-full max-w-2xl">
           <CreateGoalForm />
         </div>
       </div>

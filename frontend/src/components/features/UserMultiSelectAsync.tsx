@@ -96,7 +96,7 @@ export function UserMultiSelectAsync<
               + Add User
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="min-w-[606px] p-0">
+          <PopoverContent className="min-w-[622px] p-0">
             <UserSearchList
               query={query}
               setQuery={setQuery}
