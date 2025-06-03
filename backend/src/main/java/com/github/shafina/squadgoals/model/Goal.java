@@ -33,19 +33,11 @@ public class Goal implements Serializable {
     private Frequency frequency;
 
     @ManyToMany
-    @JoinTable(
-            name = "goal_squad",
-            joinColumns = @JoinColumn(name = "goal_id"),
-            inverseJoinColumns = @JoinColumn(name = "user_id")
-    )
+    @JoinTable(name = "goal_squad", joinColumns = @JoinColumn(name = "goal_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
     private Set<User> squad = new HashSet<>();
 
     @ManyToMany
-    @JoinTable(
-            name = "goal_tags",
-            joinColumns = @JoinColumn(name = "goal_id"),
-            inverseJoinColumns = @JoinColumn(name = "tag_id")
-    )
+    @JoinTable(name = "goal_tags", joinColumns = @JoinColumn(name = "goal_id"), inverseJoinColumns = @JoinColumn(name = "tag_id"))
     private Set<Tag> tags = new HashSet<>();
 
     private String timezone;
@@ -60,6 +52,9 @@ public class Goal implements Serializable {
     @Column(name = "updated_at")
     @UpdateTimestamp(source = SourceType.DB)
     private LocalDateTime updatedAt;
+
+    @Column(name = "next_due_at")
+    private LocalDateTime nextDueAt;
 
     public Long getId() {
         return id;
@@ -155,5 +150,13 @@ public class Goal implements Serializable {
 
     public void setPublic(Boolean isPublic) {
         this.isPublic = isPublic;
+    }
+
+    public LocalDateTime getNextDueAt() {
+        return nextDueAt;
+    }
+
+    public void setNextDueAt(LocalDateTime nextDueAt) {
+        this.nextDueAt = nextDueAt;
     }
 }
