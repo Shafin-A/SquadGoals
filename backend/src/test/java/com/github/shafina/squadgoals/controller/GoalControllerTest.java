@@ -1,6 +1,7 @@
 package com.github.shafina.squadgoals.controller;
 
 import com.github.shafina.squadgoals.dto.CreateGoalRequest;
+import com.github.shafina.squadgoals.dto.GoalDTO;
 import com.github.shafina.squadgoals.enums.Frequency;
 import com.github.shafina.squadgoals.model.Goal;
 import com.github.shafina.squadgoals.model.Tag;
@@ -79,12 +80,27 @@ class GoalControllerTest {
 
         Goal savedGoal = new Goal();
         savedGoal.setId(100L);
+        savedGoal.setTitle("Read Books");
+        savedGoal.setDescription("Read 30 minutes daily");
+        savedGoal.setTimezone("America/New_York");
+        savedGoal.setStartAt(LocalDateTime.now());
+        savedGoal.setFrequency(Frequency.DAILY);
+        savedGoal.setTags(Set.of(tag1, tag2));
+        savedGoal.setSquad(Set.of(creator, squadUser));
+        savedGoal.setCreatedBy(creator);
+
         when(goalRepository.save(any(Goal.class))).thenReturn(savedGoal);
 
-        ResponseEntity<?> response = goalController.createGoal(request, authentication);
+        ResponseEntity<GoalDTO> response = goalController.createGoal(request, authentication);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertEquals(savedGoal, response.getBody());
+        assertNotNull(response.getBody());
+
+        assertEquals(savedGoal.getId(), response.getBody().id());
+        assertEquals(savedGoal.getTitle(), response.getBody().title());
+        assertEquals(savedGoal.getDescription(), response.getBody().description());
+        assertEquals(savedGoal.getCreatedBy().getId(), response.getBody().createdBy().id());
+
         verify(invitationRepository, times(1))
                 .save(argThat(invitation -> invitation.getInvitedUser().equals(squadUser) &&
                         invitation.getInviter().equals(creator) &&
@@ -130,12 +146,27 @@ class GoalControllerTest {
 
         Goal savedGoal = new Goal();
         savedGoal.setId(200L);
+        savedGoal.setTitle("Read Books");
+        savedGoal.setDescription("Read 30 minutes daily");
+        savedGoal.setTimezone("America/New_York");
+        savedGoal.setStartAt(LocalDateTime.now());
+        savedGoal.setFrequency(Frequency.DAILY);
+        savedGoal.setTags(Set.of(tag1, tag2));
+        savedGoal.setSquad(Set.of(creator, squadUser));
+        savedGoal.setCreatedBy(creator);
+
         when(goalRepository.save(any(Goal.class))).thenReturn(savedGoal);
 
-        ResponseEntity<?> response = goalController.createGoal(request, authentication);
+        ResponseEntity<GoalDTO> response = goalController.createGoal(request, authentication);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertEquals(savedGoal, response.getBody());
+        assertNotNull(response.getBody());
+
+        assertEquals(savedGoal.getId(), response.getBody().id());
+        assertEquals(savedGoal.getTitle(), response.getBody().title());
+        assertEquals(savedGoal.getDescription(), response.getBody().description());
+        assertEquals(savedGoal.getCreatedBy().getId(), response.getBody().createdBy().id());
+
         verify(tagRepository, times(1)).save(argThat(tag -> tag.getName().equals("guitar")));
         verify(tagRepository, times(1)).save(argThat(tag -> tag.getName().equals("music")));
         verify(invitationRepository, times(1))
@@ -156,6 +187,7 @@ class GoalControllerTest {
         ResponseStatusException ex = assertThrows(ResponseStatusException.class,
                 () -> goalController.createGoal(request, authentication));
         assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
+        assertNotNull(ex.getReason());
         assertTrue(ex.getReason().contains("User not found"));
     }
 
@@ -182,6 +214,7 @@ class GoalControllerTest {
         ResponseStatusException ex = assertThrows(ResponseStatusException.class,
                 () -> goalController.createGoal(request, authentication));
         assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
+        assertNotNull(ex.getReason());
         assertTrue(ex.getReason().contains("User not found with ID: 2"));
     }
 
@@ -189,21 +222,28 @@ class GoalControllerTest {
     void createGoal_shouldSetIsPublicTrue_whenPublicTrueProvided() {
         String firebaseUid = "firebase-uid";
         when(authentication.getName()).thenReturn(firebaseUid);
+
         User creator = new User();
         creator.setId(1L);
         creator.setFirebaseUid(firebaseUid);
+
         when(userRepository.findByFirebaseUid(firebaseUid)).thenReturn(Optional.of(creator));
+
         CreateGoalRequest request = new CreateGoalRequest();
         request.setTitle("Test Goal");
         request.setPublic(true);
+
         Goal savedGoal = new Goal();
         savedGoal.setId(1L);
+        savedGoal.setCreatedBy(creator);
+
         when(goalRepository.save(any(Goal.class))).thenAnswer(invocation -> {
             Goal g = invocation.getArgument(0);
             assertTrue(g.getPublic());
             return savedGoal;
         });
-        ResponseEntity<?> response = goalController.createGoal(request, authentication);
+
+        ResponseEntity<GoalDTO> response = goalController.createGoal(request, authentication);
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
     }
 
@@ -211,21 +251,28 @@ class GoalControllerTest {
     void createGoal_shouldSetIsPublicFalse_whenPublicFalseProvided() {
         String firebaseUid = "firebase-uid";
         when(authentication.getName()).thenReturn(firebaseUid);
+
         User creator = new User();
         creator.setId(1L);
         creator.setFirebaseUid(firebaseUid);
+
         when(userRepository.findByFirebaseUid(firebaseUid)).thenReturn(Optional.of(creator));
+
         CreateGoalRequest request = new CreateGoalRequest();
         request.setTitle("Test Goal");
         request.setPublic(false);
+
         Goal savedGoal = new Goal();
         savedGoal.setId(1L);
+        savedGoal.setCreatedBy(creator);
+
         when(goalRepository.save(any(Goal.class))).thenAnswer(invocation -> {
             Goal g = invocation.getArgument(0);
             assertFalse(g.getPublic());
             return savedGoal;
         });
-        ResponseEntity<?> response = goalController.createGoal(request, authentication);
+
+        ResponseEntity<GoalDTO> response = goalController.createGoal(request, authentication);
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
     }
 
@@ -233,38 +280,57 @@ class GoalControllerTest {
     void createGoal_shouldDefaultIsPublicTrue_whenPublicNull() {
         String firebaseUid = "firebase-uid";
         when(authentication.getName()).thenReturn(firebaseUid);
+
         User creator = new User();
         creator.setId(1L);
         creator.setFirebaseUid(firebaseUid);
+
         when(userRepository.findByFirebaseUid(firebaseUid)).thenReturn(Optional.of(creator));
+
         CreateGoalRequest request = new CreateGoalRequest();
         request.setTitle("Test Goal");
         request.setPublic(null);
+
         Goal savedGoal = new Goal();
         savedGoal.setId(1L);
+        savedGoal.setCreatedBy(creator);
+
         when(goalRepository.save(any(Goal.class))).thenAnswer(invocation -> {
             Goal g = invocation.getArgument(0);
             assertTrue(g.getPublic());
             return savedGoal;
         });
-        ResponseEntity<?> response = goalController.createGoal(request, authentication);
+
+        ResponseEntity<GoalDTO> response = goalController.createGoal(request, authentication);
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
     }
 
     @Test
     void getPublicGoals_shouldReturnOnlyPublicGoals() {
+        String firebaseUid = "firebase-uid";
+        User creator = new User();
+        creator.setId(1L);
+        creator.setFirebaseUid(firebaseUid);
+
         Goal publicGoal = new Goal();
         publicGoal.setId(1L);
         publicGoal.setTitle("Public Goal");
         publicGoal.setPublic(true);
+        publicGoal.setCreatedBy(creator);
+
         Goal privateGoal = new Goal();
         privateGoal.setId(2L);
         privateGoal.setTitle("Private Goal");
         privateGoal.setPublic(false);
+        privateGoal.setCreatedBy(creator);
+
         when(goalRepository.findByIsPublicTrue()).thenReturn(List.of(publicGoal));
-        ResponseEntity<?> response = goalController.getPublicGoals(true, 10);
-        List<?> goals = (List<?>) response.getBody();
+
+        ResponseEntity<List<GoalDTO>> response = goalController.getPublicGoals(true, 10);
+        List<GoalDTO> goals = response.getBody();
+
+        assertNotNull(goals);
         assertEquals(1, goals.size());
-        assertEquals("Public Goal", ((Goal) goals.get(0)).getTitle());
+        assertEquals("Public Goal", goals.get(0).title());
     }
 }

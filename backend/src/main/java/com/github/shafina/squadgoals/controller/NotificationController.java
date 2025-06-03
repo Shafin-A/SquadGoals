@@ -27,7 +27,7 @@ public class NotificationController {
     }
 
     @GetMapping
-    public ResponseEntity<?> getUserInvitations(Authentication authentication) {
+    public ResponseEntity<List<NotificationDTO>> getUserInvitations(Authentication authentication) {
         String firebaseUid = authentication.getName();
 
         User user = userRepository.findByFirebaseUid(firebaseUid)

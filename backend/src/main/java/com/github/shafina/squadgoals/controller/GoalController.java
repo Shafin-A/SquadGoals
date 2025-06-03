@@ -1,6 +1,7 @@
 package com.github.shafina.squadgoals.controller;
 
 import com.github.shafina.squadgoals.dto.CreateGoalRequest;
+import com.github.shafina.squadgoals.dto.GoalDTO;
 import com.github.shafina.squadgoals.enums.Status;
 import com.github.shafina.squadgoals.model.Goal;
 import com.github.shafina.squadgoals.model.Invitation;
@@ -43,7 +44,7 @@ public class GoalController {
 
     @PostMapping
     @Transactional
-    public ResponseEntity<?> createGoal(@Valid @RequestBody CreateGoalRequest createGoalRequest,
+    public ResponseEntity<GoalDTO> createGoal(@Valid @RequestBody CreateGoalRequest createGoalRequest,
             Authentication authentication) {
         String firebaseUid = authentication.getName();
 
@@ -93,26 +94,32 @@ public class GoalController {
                     invitationRepository.save(invitation);
                 });
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedGoal);
+        return ResponseEntity.status(HttpStatus.CREATED).body(GoalDTO.from(savedGoal));
     }
 
     @GetMapping
-    public ResponseEntity<?> getPublicGoals(
+    public ResponseEntity<List<GoalDTO>> getPublicGoals(
             @RequestParam(defaultValue = "true") boolean recent,
             @RequestParam(defaultValue = "10") int limit) {
         List<Goal> goals = goalRepository.findByIsPublicTrue();
 
         if (recent) {
-            goals = goals.stream()
+            goals = goals
+                    .stream()
                     .sorted((g1, g2) -> g2.getCreatedAt().compareTo(g1.getCreatedAt()))
                     .limit(limit)
                     .collect(Collectors.toList());
         } else {
-            goals = goals.stream()
+            goals = goals
+                    .stream()
                     .limit(limit)
                     .collect(Collectors.toList());
         }
 
-        return ResponseEntity.ok(goals);
+        return ResponseEntity.ok(
+                goals
+                        .stream()
+                        .map(GoalDTO::from)
+                        .collect(Collectors.toList()));
     }
 }

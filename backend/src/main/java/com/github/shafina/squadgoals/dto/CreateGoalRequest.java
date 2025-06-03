@@ -26,7 +26,7 @@ public class CreateGoalRequest {
 
     private Set<Long> squadUserIds;
 
-    private Boolean isPublic;
+    private Boolean isPublic = true;
 
     public String getTitle() {
         return title;

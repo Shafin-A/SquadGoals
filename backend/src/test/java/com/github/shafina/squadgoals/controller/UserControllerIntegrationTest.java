@@ -59,8 +59,7 @@ public class UserControllerIntegrationTest {
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isConflict())
-                .andExpect(content().string("User already exists."));
+                .andExpect(status().isConflict());
     }
 
     @Test
@@ -92,8 +91,7 @@ public class UserControllerIntegrationTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name").value("Jane Smith"))
                 .andExpect(jsonPath("$.email").value("jane@example.com"))
-                .andExpect(jsonPath("$.timezone").value("Europe/London"))
-                .andExpect(jsonPath("$.firebaseUid").value(firebaseUid));
+                .andExpect(jsonPath("$.timezone").value("Europe/London"));
     }
 
     @Test

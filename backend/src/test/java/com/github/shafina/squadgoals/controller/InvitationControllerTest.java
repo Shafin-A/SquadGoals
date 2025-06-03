@@ -1,5 +1,6 @@
 package com.github.shafina.squadgoals.controller;
 
+import com.github.shafina.squadgoals.dto.InvitationDTO;
 import com.github.shafina.squadgoals.enums.Status;
 import com.github.shafina.squadgoals.model.Goal;
 import com.github.shafina.squadgoals.model.Invitation;
@@ -61,10 +62,11 @@ class InvitationControllerTest {
         when(userRepository.findByFirebaseUid(firebaseInvitedUid)).thenReturn(Optional.of(invitedUser));
         when(invitationRepository.findByInvitedUserAndStatus(invitedUser, Status.PENDING)).thenReturn(List.of(invitation));
 
-        ResponseEntity<?> response = invitationController.getInvitations(authentication);
+        ResponseEntity<List<InvitationDTO>> response = invitationController.getInvitations(authentication);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        List<?> body = (List<?>) response.getBody();
+        List<InvitationDTO> body = response.getBody();
+
         assertNotNull(body);
         assertEquals(1, body.size());
     }
@@ -102,7 +104,7 @@ class InvitationControllerTest {
         when(authentication.getName()).thenReturn(firebaseUid);
         when(userRepository.findByFirebaseUid(firebaseUid)).thenReturn(Optional.of(invitedUser));
 
-        ResponseEntity<?> response = invitationController.acceptInvitation(invitationId, authentication);
+        ResponseEntity<Void> response = invitationController.acceptInvitation(invitationId, authentication);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(Status.ACCEPTED, invitation.getStatus());
@@ -130,10 +132,9 @@ class InvitationControllerTest {
         when(authentication.getName()).thenReturn(firebaseUid);
         when(userRepository.findByFirebaseUid(firebaseUid)).thenReturn(Optional.of(authUser));
 
-        ResponseEntity<?> response = invitationController.acceptInvitation(invitationId, authentication);
+        ResponseEntity<Void> response = invitationController.acceptInvitation(invitationId, authentication);
 
         assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
-        assertEquals("You are not authorized to accept this invitation.", response.getBody());
     }
 
     @Test
@@ -162,7 +163,7 @@ class InvitationControllerTest {
         when(authentication.getName()).thenReturn(firebaseUid);
         when(userRepository.findByFirebaseUid(firebaseUid)).thenReturn(Optional.of(invitedUser));
 
-        ResponseEntity<?> response = invitationController.declineInvitation(invitationId, authentication);
+        ResponseEntity<Void> response = invitationController.declineInvitation(invitationId, authentication);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(Status.DECLINED, invitation.getStatus());
@@ -188,10 +189,9 @@ class InvitationControllerTest {
         when(authentication.getName()).thenReturn(firebaseUid);
         when(userRepository.findByFirebaseUid(firebaseUid)).thenReturn(Optional.of(authUser));
 
-        ResponseEntity<?> response = invitationController.declineInvitation(invitationId, authentication);
+        ResponseEntity<Void> response = invitationController.declineInvitation(invitationId, authentication);
 
         assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
-        assertEquals("You are not authorized to reject this invitation.", response.getBody());
     }
 
     @Test

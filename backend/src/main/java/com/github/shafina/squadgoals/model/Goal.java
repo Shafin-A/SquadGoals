@@ -43,7 +43,7 @@ public class Goal implements Serializable {
     private String timezone;
 
     @Column(name = "is_public")
-    private Boolean isPublic;
+    private Boolean isPublic = true;
 
     @Column(updatable = false, name = "created_at")
     @CreationTimestamp(source = SourceType.DB)

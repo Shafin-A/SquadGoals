@@ -191,8 +191,8 @@ public class GoalControllerIntegrationTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.title").value("Learn Guitar"))
                 .andExpect(jsonPath("$.description").value("Practice chords daily"))
-                .andExpect(jsonPath("$.tags[?(@.name == 'guitar')]").exists())
-                .andExpect(jsonPath("$.tags[?(@.name == 'music')]").exists());
+                .andExpect(jsonPath("$.tags[0]").value("music"))
+                .andExpect(jsonPath("$.tags[1]").value("guitar"));
 
         verify(tagRepository, times(1)).save(argThat(tag -> tag.getName().equals("guitar")));
         verify(tagRepository, times(1)).save(argThat(tag -> tag.getName().equals("music")));
@@ -373,14 +373,22 @@ public class GoalControllerIntegrationTest {
 
     @Test
     void getPublicGoals_shouldReturnOnlyPublicGoals() throws Exception {
+        String firebaseUid = "test-firebase-uid";
+        User creator = new User();
+        creator.setId(1L);
+        creator.setFirebaseUid(firebaseUid);
+
         Goal publicGoal = new Goal();
         publicGoal.setId(1L);
         publicGoal.setTitle("Public Goal");
         publicGoal.setPublic(true);
+        publicGoal.setCreatedBy(creator);
+
         Goal privateGoal = new Goal();
         privateGoal.setId(2L);
         privateGoal.setTitle("Private Goal");
         privateGoal.setPublic(false);
+        privateGoal.setCreatedBy(creator);
 
         when(goalRepository.findByIsPublicTrue()).thenReturn(List.of(publicGoal));
 

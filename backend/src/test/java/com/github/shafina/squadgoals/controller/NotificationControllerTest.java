@@ -50,13 +50,13 @@ public class NotificationControllerTest {
         when(userRepository.findByFirebaseUid("firebase-uid-1")).thenReturn(Optional.of(user));
         when(notificationRepository.findByUser(user)).thenReturn(List.of(notification));
 
-        ResponseEntity<?> response = notificationController.getUserInvitations(authentication);
+        ResponseEntity<List<NotificationDTO>> response = notificationController.getUserInvitations(authentication);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        List<?> body = (List<?>) response.getBody();
+        List<NotificationDTO> body =response.getBody();
         assertNotNull(body);
         assertEquals(1, body.size());
-        NotificationDTO dto = (NotificationDTO) body.get(0);
+        NotificationDTO dto = body.get(0);
         assertEquals(notification.getId(), dto.id());
         assertEquals(notification.getMessage(), dto.message());
     }
@@ -67,10 +67,10 @@ public class NotificationControllerTest {
         when(userRepository.findByFirebaseUid("firebase-uid-1")).thenReturn(Optional.of(user));
         when(notificationRepository.findByUser(user)).thenReturn(Collections.emptyList());
 
-        ResponseEntity<?> response = notificationController.getUserInvitations(authentication);
+        ResponseEntity<List<NotificationDTO>> response = notificationController.getUserInvitations(authentication);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        List<?> body = (List<?>) response.getBody();
+        List<NotificationDTO> body = response.getBody();
         assertNotNull(body);
         assertTrue(body.isEmpty());
     }
@@ -99,14 +99,14 @@ public class NotificationControllerTest {
         when(userRepository.findByFirebaseUid("firebase-uid-1")).thenReturn(Optional.of(user));
         when(notificationRepository.findByUser(user)).thenReturn(List.of(notification, notification2));
 
-        ResponseEntity<?> response = notificationController.getUserInvitations(authentication);
+        ResponseEntity<List<NotificationDTO>> response = notificationController.getUserInvitations(authentication);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        List<?> body = (List<?>) response.getBody();
+        List<NotificationDTO> body = response.getBody();
         assertNotNull(body);
         assertEquals(2, body.size());
-        NotificationDTO dto1 = (NotificationDTO) body.get(0);
-        NotificationDTO dto2 = (NotificationDTO) body.get(1);
+        NotificationDTO dto1 = body.get(0);
+        NotificationDTO dto2 = body.get(1);
         assertEquals(notification.getId(), dto1.id());
         assertEquals(notification2.getId(), dto2.id());
         assertEquals("Another notification", dto2.message());
