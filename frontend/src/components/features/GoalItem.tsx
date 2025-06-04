@@ -59,9 +59,7 @@ export const GoalItem = ({ goal }: GoalItemProps) => (
       </div>
       <div className="flex gap-2 flex-wrap mt-8">
         {goal.tags?.map((tag: string) => (
-          <Badge key={tag} className="truncate">
-            {tag}
-          </Badge>
+          <Badge key={tag}>{tag}</Badge>
         ))}
       </div>
     </CardContent>

@@ -19,6 +19,8 @@ import {
 } from "firebase/auth";
 import { auth } from "@/firebase";
 import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { createUser } from "@/api/auth";
 
 export function SignUpForm({
   className,
@@ -28,8 +30,11 @@ export function SignUpForm({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
+
+  const createUserMutation = useMutation({
+    mutationFn: createUser,
+  });
 
   const handleSignUp = async (
     name: string,
@@ -37,8 +42,7 @@ export function SignUpForm({
     password: string
   ) => {
     try {
-      setError(null);
-      setLoading(true);
+      setValidationError(null);
 
       const validation = await validatePassword(auth, password);
 
@@ -54,8 +58,7 @@ export function SignUpForm({
           msg += "- At least one number\n";
         if (!validation.containsNonAlphanumericCharacter)
           msg += "- At least one special character\n";
-        setError(msg.trim());
-        setLoading(false);
+        setValidationError(msg.trim());
         return;
       }
 
@@ -68,7 +71,6 @@ export function SignUpForm({
       const user = userCredential.user;
 
       const idToken = await user.getIdToken();
-      console.log("ID Token:", idToken);
 
       const now = new Date();
 
@@ -79,33 +81,23 @@ export function SignUpForm({
         createdAt: now,
       };
 
-      await fetch("http://localhost:8080/api/users", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${idToken}`,
-        },
-        body: JSON.stringify(profile),
-      });
+      await createUserMutation.mutateAsync({ profile, idToken });
 
       await sendEmailVerification(user);
 
       await signOut(auth);
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message || "Failed to sign up");
-      } else {
-        setError("Failed to sign up");
-      }
-    } finally {
-      setLoading(false);
+      setValidationError(
+        err instanceof Error ? err.message : "Failed to sign up"
+      );
     }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    createUserMutation.reset();
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setValidationError("Passwords do not match");
       return;
     }
     handleSignUp(name, email, password);
@@ -165,12 +157,19 @@ export function SignUpForm({
                   onChange={(e) => setConfirmPassword(e.target.value)}
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Loading" : "Sign Up"}
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={createUserMutation.isPending}
+              >
+                {createUserMutation.isPending ? "Loading" : "Sign Up"}
               </Button>
-              {error && (
+              {(validationError || createUserMutation.error) && (
                 <div className="text-red-500 text-sm text-center whitespace-pre-wrap">
-                  {error}
+                  {validationError ||
+                    (createUserMutation.error instanceof Error
+                      ? createUserMutation.error.message
+                      : "Failed to sign up")}
                 </div>
               )}
             </div>

@@ -329,23 +329,18 @@ export default function CreateGoalForm() {
                 </FormItem>
               )}
             />
+
+            <Button type="submit" disabled={createGoalMutation.isPending}>
+              {createGoalMutation.isPending ? "Loading" : "Create"}
+            </Button>
+            {form.formState.errors.root && (
+              <div className="text-destructive text-sm">
+                {form.formState.errors.root.message}
+              </div>
+            )}
           </form>
         </Form>
       </CardContent>
-      <CardFooter className="flex flex-col items-start gap-2">
-        <Button
-          type="submit"
-          form="create-goal-form"
-          disabled={createGoalMutation.isPending}
-        >
-          {createGoalMutation.isPending ? "Loading" : "Create"}
-        </Button>
-        {form.formState.errors.root && (
-          <div className="text-destructive text-sm">
-            {form.formState.errors.root.message}
-          </div>
-        )}
-      </CardFooter>
     </Card>
   );
 }
