@@ -5,8 +5,8 @@ import com.github.shafina.squadgoals.enums.Status;
 import com.github.shafina.squadgoals.model.Goal;
 import com.github.shafina.squadgoals.model.Invitation;
 import com.github.shafina.squadgoals.model.User;
-import com.github.shafina.squadgoals.repository.InvitationRepository;
 import com.github.shafina.squadgoals.repository.GoalRepository;
+import com.github.shafina.squadgoals.repository.InvitationRepository;
 import com.github.shafina.squadgoals.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,7 +14,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.server.ResponseStatusException;
-import java.util.*;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 

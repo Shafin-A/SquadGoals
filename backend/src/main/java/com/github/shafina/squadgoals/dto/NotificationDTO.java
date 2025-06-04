@@ -1,8 +1,8 @@
 package com.github.shafina.squadgoals.dto;
 
-import java.time.LocalDateTime;
-
 import com.github.shafina.squadgoals.model.Notification;
+
+import java.time.LocalDateTime;
 
 public record NotificationDTO(
         Long id,

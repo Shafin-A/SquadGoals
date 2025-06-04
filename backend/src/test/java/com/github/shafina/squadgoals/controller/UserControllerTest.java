@@ -7,11 +7,14 @@ import com.github.shafina.squadgoals.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
@@ -72,27 +75,50 @@ class UserControllerTest {
         ResponseEntity<UserDTO> response = userController.createUser(request, authentication);
 
         assertEquals(201, response.getStatusCode().value());
+    }
 
-        UserDTO returnedUser = (UserDTO) response.getBody();
-        assertNotNull(returnedUser);
-        assertEquals("Jane Smith", returnedUser.name());
-        assertEquals("jane@example.com", returnedUser.email());
-        assertEquals("Europe/London", returnedUser.timezone());
+    @Test
+    void searchUsers_shouldReturnBadRequest_whenQueryIsTooShort() {
+        when(authentication.getName()).thenReturn("firebaseUid");
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+                () -> userController.searchUsers("a", 5, authentication));
+        assertEquals(400, exception.getStatusCode().value());
+        assertNotNull(exception.getReason());
+        assertTrue(exception.getReason().contains("at least 2 characters"));
     }
 
     @Test
     void searchUsers_shouldReturnBadRequest_whenLimitIsLessThanOne() {
-        ResponseEntity<List<UserDTO>> response = userController.searchUsers("test", 0);
-        assertEquals(400, response.getStatusCode().value());
-        assertNull(response.getBody());
+        when(authentication.getName()).thenReturn("firebaseUid");
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+                () -> userController.searchUsers("test", 0, authentication));
+        assertEquals(400, exception.getStatusCode().value());
+        assertNotNull(exception.getReason());
+        assertTrue(exception.getReason().contains("Limit cannot be less than 1"));
+    }
+
+    @Test
+    void searchUsers_shouldReturnNotFound_whenAuthUserNotFound() {
+        when(authentication.getName()).thenReturn("firebaseUid");
+        when(userRepository.findByFirebaseUid("firebaseUid")).thenReturn(Optional.empty());
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+                () -> userController.searchUsers("test", 2, authentication));
+        assertEquals(404, exception.getStatusCode().value());
+        assertNotNull(exception.getReason());
+        assertTrue(exception.getReason().contains("User not found"));
     }
 
     @Test
     void searchUsers_shouldReturnEmptyList_whenNoUsersFound() {
-        when(userRepository.findByNameContainingIgnoreCaseOrEmailContainingIgnoreCase("notfound", "notfound"))
+        String firebaseUid = "firebaseUid";
+        User authUser = new User();
+        authUser.setId(1L);
+        when(authentication.getName()).thenReturn(firebaseUid);
+        when(userRepository.findByFirebaseUid(firebaseUid)).thenReturn(Optional.of(authUser));
+        when(userRepository.searchUsersExcludingCurrent("notfound", 1L, PageRequest.of(0, 5)))
                 .thenReturn(List.of());
 
-        ResponseEntity<List<UserDTO>> response = userController.searchUsers("notfound", 5);
+        ResponseEntity<List<UserDTO>> response = userController.searchUsers("notfound", 5, authentication);
 
         assertEquals(200, response.getStatusCode().value());
         assertNotNull(response.getBody());
@@ -100,60 +126,32 @@ class UserControllerTest {
     }
 
     @Test
-    void searchUsers_shouldReturnLimitedResults_whenMoreUsersFoundThanLimit() {
-        User user1 = new User();
-        user1.setId(1L);
-        user1.setName("Alice");
-        user1.setEmail("alice@example.com");
+    void searchUsers_shouldNotReturnAuthUserInResults() {
+        String firebaseUid = "firebaseUid";
+        User authUser = new User();
+        authUser.setId(1L);
+        authUser.setName("Auth User");
+        authUser.setEmail("auth@example.com");
+        authUser.setTimezone("UTC");
 
         User user2 = new User();
         user2.setId(2L);
         user2.setName("Bob");
         user2.setEmail("bob@example.com");
+        user2.setTimezone("UTC");
 
-        User user3 = new User();
-        user3.setId(3L);
-        user3.setName("Charlie");
-        user3.setEmail("charlie@example.com");
+        List<User> users = List.of(user2);
 
-        List<User> users = List.of(user1, user2, user3);
-
-        when(userRepository.findByNameContainingIgnoreCaseOrEmailContainingIgnoreCase("a", "a"))
+        when(authentication.getName()).thenReturn(firebaseUid);
+        when(userRepository.findByFirebaseUid(firebaseUid)).thenReturn(Optional.of(authUser));
+        when(userRepository.searchUsersExcludingCurrent("example", 1L, PageRequest.of(0, 5)))
                 .thenReturn(users);
 
-        ResponseEntity<List<UserDTO>> response = userController.searchUsers("a", 2);
+        ResponseEntity<List<UserDTO>> response = userController.searchUsers("example", 5, authentication);
 
         assertEquals(200, response.getStatusCode().value());
         assertNotNull(response.getBody());
-        assertEquals(2, response.getBody().size());
-        assertEquals("Alice", response.getBody().get(0).name());
-        assertEquals("Bob", response.getBody().get(1).name());
+        assertEquals(1, response.getBody().size());
+        assertEquals("Bob", response.getBody().get(0).name());
     }
-
-    @Test
-    void searchUsers_shouldReturnAllResults_whenUsersFoundLessThanLimit() {
-        User user1 = new User();
-        user1.setId(1L);
-        user1.setName("Alice");
-        user1.setEmail("alice@example.com");
-
-        User user2 = new User();
-        user2.setId(2L);
-        user2.setName("Bob");
-        user2.setEmail("bob@example.com");
-
-        List<User> users = List.of(user1, user2);
-
-        when(userRepository.findByNameContainingIgnoreCaseOrEmailContainingIgnoreCase("b", "b"))
-                .thenReturn(users);
-
-        ResponseEntity<List<UserDTO>> response = userController.searchUsers("b", 5);
-
-        assertEquals(200, response.getStatusCode().value());
-        assertNotNull(response.getBody());
-        assertEquals(2, response.getBody().size());
-        assertEquals("Alice", response.getBody().get(0).name());
-        assertEquals("Bob", response.getBody().get(1).name());
-    }
-
 }

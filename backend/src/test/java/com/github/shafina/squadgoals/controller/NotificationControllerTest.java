@@ -11,11 +11,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.server.ResponseStatusException;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class NotificationControllerTest {
 
@@ -53,7 +56,7 @@ public class NotificationControllerTest {
         ResponseEntity<List<NotificationDTO>> response = notificationController.getUserInvitations(authentication);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        List<NotificationDTO> body =response.getBody();
+        List<NotificationDTO> body = response.getBody();
         assertNotNull(body);
         assertEquals(1, body.size());
         NotificationDTO dto = body.get(0);

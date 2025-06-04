@@ -5,12 +5,8 @@ import com.github.shafina.squadgoals.enums.Status;
 import com.github.shafina.squadgoals.model.Goal;
 import com.github.shafina.squadgoals.model.Invitation;
 import com.github.shafina.squadgoals.model.User;
-import com.github.shafina.squadgoals.repository.InvitationRepository;
 import com.github.shafina.squadgoals.repository.GoalRepository;
-
-import java.util.List;
-import java.util.Set;
-
+import com.github.shafina.squadgoals.repository.InvitationRepository;
 import com.github.shafina.squadgoals.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,94 +15,97 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
+import java.util.Set;
+
 @RestController
 @RequestMapping("/api/invitations")
 public class InvitationController {
-        private final InvitationRepository invitationRepository;
-        private final GoalRepository goalRepository;
-        private final UserRepository userRepository;
+    private final InvitationRepository invitationRepository;
+    private final GoalRepository goalRepository;
+    private final UserRepository userRepository;
 
-        public InvitationController(InvitationRepository invitationRepository, GoalRepository goalRepository,
-                        UserRepository userRepository) {
-                this.invitationRepository = invitationRepository;
-                this.goalRepository = goalRepository;
-                this.userRepository = userRepository;
+    public InvitationController(InvitationRepository invitationRepository, GoalRepository goalRepository,
+                                UserRepository userRepository) {
+        this.invitationRepository = invitationRepository;
+        this.goalRepository = goalRepository;
+        this.userRepository = userRepository;
+    }
+
+    @GetMapping
+    public ResponseEntity<List<InvitationDTO>> getInvitations(Authentication authentication) {
+        String firebaseUid = authentication.getName();
+
+        User user = userRepository.findByFirebaseUid(firebaseUid)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        List<Invitation> pendingInvitations = invitationRepository.findByInvitedUserAndStatus(user,
+                Status.PENDING);
+
+        List<InvitationDTO> result = pendingInvitations.stream()
+                .map(InvitationDTO::from)
+                .toList();
+
+        return ResponseEntity.ok(result);
+    }
+
+    @PostMapping("/{invitationId}/accept")
+    @Transactional
+    public ResponseEntity<Void> acceptInvitation(@PathVariable Long invitationId, Authentication authentication) {
+        Invitation invitation = invitationRepository
+                .findById(invitationId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Invitation not found"));
+
+        User invitedUser = invitation.getInvitedUser();
+
+        String firebaseUid = authentication.getName();
+
+        Long authUserId = userRepository
+                .findByFirebaseUid(firebaseUid)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"))
+                .getId();
+
+        if (!authUserId.equals(invitedUser.getId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
-        @GetMapping
-        public ResponseEntity<List<InvitationDTO>> getInvitations(Authentication authentication) {
-                String firebaseUid = authentication.getName();
+        invitation.setStatus(Status.ACCEPTED);
+        invitationRepository.save(invitation);
 
-                User user = userRepository.findByFirebaseUid(firebaseUid)
-                                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        Goal goal = invitation.getGoal();
+        Set<User> squad = goal.getSquad();
+        squad.add(invitedUser);
+        goal.setSquad(squad);
+        goalRepository.save(goal);
 
-                List<Invitation> pendingInvitations = invitationRepository.findByInvitedUserAndStatus(user,
-                                Status.PENDING);
+        return ResponseEntity.ok().build();
+    }
 
-                List<InvitationDTO> result = pendingInvitations.stream()
-                                .map(InvitationDTO::from)
-                                .toList();
+    @PostMapping("/{invitationId}/decline")
+    @Transactional
+    public ResponseEntity<Void> declineInvitation(@PathVariable Long invitationId, Authentication authentication) {
+        Invitation invitation = invitationRepository
+                .findById(invitationId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Invitation not found"));
 
-                return ResponseEntity.ok(result);
+        User invitedUser = invitation.getInvitedUser();
+
+        String firebaseUid = authentication.getName();
+
+        Long authUserId = userRepository
+                .findByFirebaseUid(firebaseUid)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"))
+                .getId();
+
+        if (!authUserId.equals(invitedUser.getId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
-        @PostMapping("/{invitationId}/accept")
-        @Transactional
-        public ResponseEntity<Void> acceptInvitation(@PathVariable Long invitationId, Authentication authentication) {
-                Invitation invitation = invitationRepository
-                                .findById(invitationId)
-                                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                                                "Invitation not found"));
+        invitation.setStatus(Status.DECLINED);
+        invitationRepository.save(invitation);
 
-                User invitedUser = invitation.getInvitedUser();
-
-                String firebaseUid = authentication.getName();
-
-                Long authUserId = userRepository
-                                .findByFirebaseUid(firebaseUid)
-                                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"))
-                                .getId();
-
-                if (!authUserId.equals(invitedUser.getId())) {
-                        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-                }
-
-                invitation.setStatus(Status.ACCEPTED);
-                invitationRepository.save(invitation);
-
-                Goal goal = invitation.getGoal();
-                Set<User> squad = goal.getSquad();
-                squad.add(invitedUser);
-                goal.setSquad(squad);
-                goalRepository.save(goal);
-
-                return ResponseEntity.ok().build();
-        }
-
-        @PostMapping("/{invitationId}/decline")
-        @Transactional
-        public ResponseEntity<Void> declineInvitation(@PathVariable Long invitationId, Authentication authentication) {
-                Invitation invitation = invitationRepository
-                                .findById(invitationId)
-                                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                                                "Invitation not found"));
-
-                User invitedUser = invitation.getInvitedUser();
-
-                String firebaseUid = authentication.getName();
-
-                Long authUserId = userRepository
-                                .findByFirebaseUid(firebaseUid)
-                                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"))
-                                .getId();
-
-                if (!authUserId.equals(invitedUser.getId())) {
-                        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-                }
-
-                invitation.setStatus(Status.DECLINED);
-                invitationRepository.save(invitation);
-
-                return ResponseEntity.ok().build();
-        }
+        return ResponseEntity.ok().build();
+    }
 }

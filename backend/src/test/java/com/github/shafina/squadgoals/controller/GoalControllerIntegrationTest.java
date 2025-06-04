@@ -123,14 +123,14 @@ public class GoalControllerIntegrationTest {
 
         verify(invitationRepository, times(1)).save(argThat(invitation ->
                 invitation.getInvitedUser().equals(squadUser1) &&
-                invitation.getInviter().equals(creator) &&
-                invitation.getGoal().equals(savedGoal)
+                        invitation.getInviter().equals(creator) &&
+                        invitation.getGoal().equals(savedGoal)
         ));
 
         verify(invitationRepository, times(1)).save(argThat(invitation ->
                 invitation.getInvitedUser().equals(squadUser2) &&
-                invitation.getInviter().equals(creator) &&
-                invitation.getGoal().equals(savedGoal)
+                        invitation.getInviter().equals(creator) &&
+                        invitation.getGoal().equals(savedGoal)
         ));
     }
 
@@ -199,8 +199,8 @@ public class GoalControllerIntegrationTest {
 
         verify(invitationRepository, times(1)).save(argThat(invitation ->
                 invitation.getInvitedUser().equals(squadUser) &&
-                invitation.getInviter().equals(creator) &&
-                invitation.getGoal().equals(savedGoal)
+                        invitation.getInviter().equals(creator) &&
+                        invitation.getGoal().equals(savedGoal)
         ));
     }
 
