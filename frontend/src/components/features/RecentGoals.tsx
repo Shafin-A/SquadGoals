@@ -12,8 +12,7 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { Goal } from "@/lib/types";
-import { Badge } from "../ui/badge";
-import { GoalItem } from "./GoalItem";
+import { GoalItem } from "@/components/features/GoalItem";
 
 export const RecentGoals = () => {
   const [goals, setGoals] = useState<Goal[]>([]);
