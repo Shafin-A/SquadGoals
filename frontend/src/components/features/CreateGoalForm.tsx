@@ -36,6 +36,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useMutation } from "@tanstack/react-query";
+import { createGoal } from "@/api/goal";
 
 const formSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -78,11 +80,8 @@ export default function CreateGoalForm() {
     },
   });
 
-  const [loading, setLoading] = useState(false);
-
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    try {
-      setLoading(true);
+  const createGoalMutation = useMutation({
+    mutationFn: async (values: z.infer<typeof formSchema>) => {
       const user = auth.currentUser;
 
       if (!user) {
@@ -102,15 +101,9 @@ export default function CreateGoalForm() {
 
       const idToken = await user.getIdToken();
 
-      await fetch("http://localhost:8080/api/goals", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${idToken}`,
-        },
-        body: JSON.stringify(createGoalBody),
-      });
-    } catch (error) {
+      return createGoal(createGoalBody, idToken);
+    },
+    onError: (error: any) => {
       form.setError("root", {
         type: "server",
         message:
@@ -118,9 +111,11 @@ export default function CreateGoalForm() {
             ? error.message
             : "An unexpected error occurred.",
       });
-    } finally {
-      setLoading(false);
-    }
+    },
+  });
+
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    createGoalMutation.mutate(values);
   };
 
   return (
@@ -339,8 +334,12 @@ export default function CreateGoalForm() {
         </Form>
       </CardContent>
       <CardFooter className="flex flex-col items-start gap-2">
-        <Button type="submit" form="create-goal-form">
-          {loading ? "Loading" : "Create"}
+        <Button
+          type="submit"
+          form="create-goal-form"
+          disabled={createGoalMutation.isPending}
+        >
+          {createGoalMutation.isPending ? "Loading" : "Create"}
         </Button>
         {form.formState.errors.root && (
           <div className="text-destructive text-sm">
