@@ -12,6 +12,8 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { Goal } from "@/lib/types";
+import { Badge } from "../ui/badge";
+import { GoalItem } from "./GoalItem";
 
 export const RecentGoals = () => {
   const [goals, setGoals] = useState<Goal[]>([]);
@@ -25,7 +27,7 @@ export const RecentGoals = () => {
         setError(null);
 
         const res = await fetch(
-          "http://localhost:8080/api/goals?recent=true&limit=10",
+          "http://localhost:8080/api/goals?recent=true&limit=6",
           {
             method: "GET",
             headers: {
@@ -87,32 +89,15 @@ export const RecentGoals = () => {
             </p>
           </div>
         ) : (
-          <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {goals.map((goal) => (
-              <div
+              <Link
+                href={`/goals/${goal.id}`}
                 key={goal.id}
-                className="rounded-lg border bg-muted p-4 shadow flex flex-col gap-2"
+                className="no-underline"
               >
-                <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-lg">{goal.title}</h3>
-                  <span className="text-xs text-muted-foreground">
-                    {goal.timezone}
-                  </span>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  {goal.description}
-                </p>
-                <div className="flex gap-2 flex-wrap mt-2">
-                  {goal.tags?.map((tag: string) => (
-                    <span
-                      key={tag}
-                      className="bg-accent text-accent-foreground rounded px-2 py-0.5 text-xs"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
+                <GoalItem goal={goal} />
+              </Link>
             ))}
           </div>
         )}
