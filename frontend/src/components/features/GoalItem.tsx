@@ -32,11 +32,16 @@ export const GoalItem = ({ goal }: GoalItemProps) => (
           <span className="inline-flex items-center gap-1 mt-1">
             <Avatar className="w-5 h-5">
               <AvatarImage
-                src={goal.createdBy?.profilePicture}
-                alt={goal.createdBy?.name}
+                src={goal.createdBy.profilePicture}
+                alt={goal.createdBy.name}
               />
               <AvatarFallback className="truncate">
-                {goal.createdBy?.name?.[0] ?? "?"}
+                {goal.createdBy.name
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")
+                  .toUpperCase()
+                  .slice(0, 2)}
               </AvatarFallback>
             </Avatar>
             {goal.createdBy?.name}

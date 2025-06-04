@@ -31,12 +31,12 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { useMutation } from "@tanstack/react-query";
 import { createGoal } from "@/api/goal";
+import { searchUsers } from "@/api/user";
 
 const formSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -263,12 +263,12 @@ export default function CreateGoalForm() {
                     <UserMultiSelectAsync
                       id="squad-select"
                       field={field}
-                      loadUsers={async () => {
-                        return [
-                          { id: "1", name: "John Doe", img: "" },
-                          { id: "2", name: "John Dose", img: "" },
-                          { id: "3", name: "John Doae", img: "" },
-                        ];
+                      loadUsers={async (inputValue: string) => {
+                        if (!inputValue) return [];
+                        const user = auth.currentUser;
+                        if (!user) return [];
+                        const idToken = await user.getIdToken();
+                        return searchUsers({ query: inputValue, idToken });
                       }}
                     />
                   </FormControl>

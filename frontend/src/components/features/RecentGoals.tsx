@@ -23,7 +23,7 @@ export const RecentGoals = () => {
     error,
   } = useQuery<Goal[], Error>({
     queryKey: ["recent-goals"],
-    queryFn: fetchRecentGoals,
+    queryFn: () => fetchRecentGoals({}),
   });
 
   return (

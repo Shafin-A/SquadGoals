@@ -8,8 +8,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-
-type User = { id: string; name: string; img?: string };
+import { User } from "@/lib/types";
 
 type UserSearchListProps = {
   query: string;
@@ -50,12 +49,15 @@ export const UserSearchList = ({
                   <CommandItem
                     key={user.id}
                     onSelect={() => handleSelect(user)}
-                    value={user.name}
+                    value={`${user.name} ${user.email}`}
                   >
                     <div className="flex items-center gap-2">
                       <Avatar className="w-6 h-6">
-                        {user.img ? (
-                          <AvatarImage src={user.img} alt={user.name} />
+                        {user.profilePicture ? (
+                          <AvatarImage
+                            src={user.profilePicture}
+                            alt={user.name}
+                          />
                         ) : null}
                         <AvatarFallback>
                           {user.name
@@ -66,7 +68,7 @@ export const UserSearchList = ({
                             .slice(0, 2)}
                         </AvatarFallback>
                       </Avatar>
-                      <span>{user.name}</span>
+                      <span>{`${user.name} | ${user.email}`}</span>
                     </div>
                   </CommandItem>
                 ))}

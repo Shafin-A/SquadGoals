@@ -20,7 +20,7 @@ import {
 import { auth } from "@/firebase";
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { createUser } from "@/api/auth";
+import { createUser } from "@/api/user";
 
 export function SignUpForm({
   className,

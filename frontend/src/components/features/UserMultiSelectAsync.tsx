@@ -21,12 +21,7 @@ import {
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { useDebounce } from "@/hooks/useDebounce";
 import { UserSearchList } from "@/components/features/UserSearchList";
-
-type User = {
-  id: string;
-  name: string;
-  img?: string;
-};
+import { User } from "@/lib/types";
 
 type UserMultiSelectAsyncProps<
   TFieldValues extends FieldValues,
@@ -59,6 +54,11 @@ export function UserMultiSelectAsync<
   const debouncedQuery = useDebounce(query, 300);
 
   useEffect(() => {
+    if (debouncedQuery.length < 2) {
+      setOptions([]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     loadUsers(debouncedQuery)
       .then((res) => setOptions(res))
@@ -147,7 +147,9 @@ export function UserMultiSelectAsync<
             className="flex items-center px-3 py-1 rounded-full shadow-sm border hover:shadow-md transition-all group bg-muted"
           >
             <Avatar className="w-7 h-7 mr-2 border shadow">
-              {user.img ? <AvatarImage src={user.img} alt={user.name} /> : null}
+              {user.profilePicture ? (
+                <AvatarImage src={user.profilePicture} alt={user.name} />
+              ) : null}
               <AvatarFallback>
                 {user.name
                   .split(" ")

@@ -12,7 +12,7 @@ export default async function Home() {
 
   await queryClient.prefetchQuery({
     queryKey: ["recent-goals"],
-    queryFn: fetchRecentGoals,
+    queryFn: () => fetchRecentGoals({}),
   });
 
   return (

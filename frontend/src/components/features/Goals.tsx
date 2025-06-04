@@ -35,7 +35,7 @@ export const Goals = () => {
     error,
   } = useQuery<Goal[], Error>({
     queryKey: ["recent-goals"],
-    queryFn: fetchRecentGoals,
+    queryFn: () => fetchRecentGoals({}),
   });
 
   const user = auth.currentUser;

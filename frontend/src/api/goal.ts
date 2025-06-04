@@ -11,9 +11,15 @@ interface CreateGoalBody {
   timezone: string;
 }
 
-export const fetchRecentGoals = async (): Promise<Goal[]> => {
+export const fetchRecentGoals = async ({
+  recent = true,
+  limit = 6,
+}: {
+  recent?: boolean;
+  limit?: number;
+}): Promise<Goal[]> => {
   const res = await fetch(
-    "http://localhost:8080/api/goals?recent=true&limit=6",
+    `http://localhost:8080/api/goals?recent=${recent}&limit=${limit}`,
     {
       method: "GET",
       headers: {
