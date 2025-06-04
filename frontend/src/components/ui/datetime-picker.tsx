@@ -89,7 +89,7 @@ export const DateTimePicker = ({
         <div className="sm:flex">
           <Calendar
             mode="single"
-            disabled={{ before: now }}
+            disabled={disablePreviousDates ? { before: now } : undefined}
             selected={value}
             onSelect={handleDateSelect}
             autoFocus

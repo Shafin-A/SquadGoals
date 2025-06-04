@@ -26,7 +26,6 @@ import { DateTimePicker } from "@/components/ui/datetime-picker";
 import { FREQUENCY, VISIBILITY } from "@/lib/constants";
 import { UserMultiSelectAsync } from "@/components/features/UserMultiSelectAsync";
 import { auth } from "@/firebase";
-import { useState } from "react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Card,
@@ -103,7 +102,7 @@ export default function CreateGoalForm() {
 
       return createGoal(createGoalBody, idToken);
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       form.setError("root", {
         type: "server",
         message:

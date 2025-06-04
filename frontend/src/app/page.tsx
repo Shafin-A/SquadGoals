@@ -1,5 +1,3 @@
-"use client";
-
 import Image from "next/image";
 import { RecentGoals } from "@/components/features/RecentGoals";
 import {
