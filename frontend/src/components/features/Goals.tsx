@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { IconInput } from "@/components/ui/icon-input";
-import { SearchIcon } from "lucide-react";
+import { Frown, Loader2, SearchIcon } from "lucide-react";
 import { Form, FormField, FormItem, FormControl } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { auth } from "@/firebase";
@@ -14,6 +14,10 @@ import {
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
+import { useQuery } from "@tanstack/react-query";
+import { Goal } from "@/lib/types";
+import { fetchRecentGoals } from "@/api/goal";
+import { GoalItem } from "./GoalItem";
 
 export const Goals = () => {
   const form = useForm({
@@ -23,6 +27,16 @@ export const Goals = () => {
   const onSubmit = (values: { search: string }) => {
     console.log("Search submitted:", values.search);
   };
+
+  const {
+    data: goals = [],
+    isLoading,
+    isError,
+    error,
+  } = useQuery<Goal[], Error>({
+    queryKey: ["recent-goals"],
+    queryFn: fetchRecentGoals,
+  });
 
   const user = auth.currentUser;
 
@@ -78,7 +92,38 @@ export const Goals = () => {
           </h2>
           <Card className="mb-4">
             <CardContent className="p-4 text-muted-foreground">
-              No recent goals yet.
+              {isLoading ? (
+                <div className="flex justify-center items-center p-8">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                </div>
+              ) : isError ? (
+                <div className="flex flex-col items-center justify-center rounded-lg p-8 shadow-inner">
+                  <Frown className="w-16 h-16 mb-4" />
+                  <p className="text-lg mb-2 text-center text-destructive">
+                    {error?.message || "Unexpected error occurred"}
+                  </p>
+                </div>
+              ) : goals.length === 0 ? (
+                <div className="flex flex-col items-center justify-center rounded-lg p-8 shadow-inner">
+                  <Frown className="w-16 h-16 mb-4" />
+                  <p className="text-lg mb-2 text-center">
+                    No goals are currently looking for squad members. <br />
+                    Be the first to create a goal and find your squad!
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {goals.map((goal) => (
+                    <Link
+                      href={`/goals/${goal.id}`}
+                      key={goal.id}
+                      className="no-underline"
+                    >
+                      <GoalItem goal={goal} />
+                    </Link>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </section>

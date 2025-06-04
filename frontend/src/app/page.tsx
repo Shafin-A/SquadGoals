@@ -2,8 +2,21 @@
 
 import Image from "next/image";
 import { RecentGoals } from "@/components/features/RecentGoals";
+import {
+  dehydrate,
+  HydrationBoundary,
+  QueryClient,
+} from "@tanstack/react-query";
+import { fetchRecentGoals } from "@/api/goal";
 
-export default function Home() {
+export default async function Home() {
+  const queryClient = new QueryClient();
+
+  await queryClient.prefetchQuery({
+    queryKey: ["recent-goals"],
+    queryFn: fetchRecentGoals,
+  });
+
   return (
     <div className="min-h-screen flex">
       <main className="mx-4 my-10 md:mx-20 md:my-20 w-full">
@@ -35,7 +48,9 @@ export default function Home() {
           <h1 className="text-3xl md:text-4xl font-bold mb-4 text-center lg:text-left">
             Recent Goals Looking For Squad Members
           </h1>
-          <RecentGoals />
+          <HydrationBoundary state={dehydrate(queryClient)}>
+            <RecentGoals />
+          </HydrationBoundary>
         </div>
       </main>
     </div>
