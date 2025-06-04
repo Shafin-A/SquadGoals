@@ -5,10 +5,12 @@ import com.github.shafina.squadgoals.dto.UserDTO;
 import com.github.shafina.squadgoals.model.User;
 import com.github.shafina.squadgoals.repository.UserRepository;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -24,7 +26,7 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<UserDTO> createUser(@Valid @RequestBody CreateUserRequest request,
-            Authentication authentication) {
+                                              Authentication authentication) {
         String firebaseUid = authentication.getName();
 
         if (userRepository.existsByFirebaseUid(firebaseUid)) {
@@ -46,13 +48,28 @@ public class UserController {
     @GetMapping("/search")
     public ResponseEntity<List<UserDTO>> searchUsers(
             @RequestParam String query,
-            @RequestParam(defaultValue = "10") int limit) {
+            @RequestParam(defaultValue = "10") int limit,
+            Authentication authentication) {
 
-        if (limit < 1) {
-            return ResponseEntity.badRequest().build();
+        if (query.length() < 2) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Query must be at least 2 characters long");
         }
 
-        List<User> foundUsers = userRepository.findByNameContainingIgnoreCaseOrEmailContainingIgnoreCase(query, query);
+        if (limit < 1) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Limit cannot be less than 1");
+        }
+
+        String firebaseUid = authentication.getName();
+
+        Long authUserId = userRepository
+                .findByFirebaseUid(firebaseUid)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"))
+                .getId();
+
+        PageRequest limitOnly = PageRequest.of(0, limit);
+
+        List<User> foundUsers = userRepository
+                .searchUsersExcludingCurrent(query, authUserId, limitOnly);
 
         return ResponseEntity.ok(
                 foundUsers
