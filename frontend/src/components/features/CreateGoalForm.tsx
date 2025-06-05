@@ -59,7 +59,7 @@ const formSchema = z.object({
       message: "Start date and time must be in the future",
     }),
   squadUserIds: z
-    .array(z.string().min(1))
+    .array(z.number().positive())
     .max(10, "Squads can only have a maximum of 10 members")
     .optional(),
   visibility: z.nativeEnum(VISIBILITY),

@@ -6,7 +6,7 @@ interface CreateGoalBody {
   frequency: string;
   tagNames?: string[];
   startAt: Date;
-  squadUserIds?: string[];
+  squadUserIds?: number[];
   isPublic: boolean;
   timezone: string;
 }
