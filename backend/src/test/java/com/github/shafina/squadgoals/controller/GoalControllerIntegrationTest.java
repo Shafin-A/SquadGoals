@@ -7,10 +7,7 @@ import com.github.shafina.squadgoals.enums.Frequency;
 import com.github.shafina.squadgoals.model.Goal;
 import com.github.shafina.squadgoals.model.Tag;
 import com.github.shafina.squadgoals.model.User;
-import com.github.shafina.squadgoals.repository.GoalRepository;
-import com.github.shafina.squadgoals.repository.InvitationRepository;
-import com.github.shafina.squadgoals.repository.TagRepository;
-import com.github.shafina.squadgoals.repository.UserRepository;
+import com.github.shafina.squadgoals.repository.*;
 import com.github.shafina.squadgoals.security.FirebaseAuthProvider;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,6 +53,9 @@ public class GoalControllerIntegrationTest {
 
     @MockitoBean
     private InvitationRepository invitationRepository;
+
+    @MockitoBean
+    private NotificationRepository notificationRepository;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -128,10 +128,24 @@ public class GoalControllerIntegrationTest {
         ));
 
         verify(invitationRepository, times(1)).save(argThat(invitation ->
+                invitation.getInvitedUser().equals(squadUser1) &&
+                        invitation.getInviter().equals(creator) &&
+                        invitation.getGoal().equals(savedGoal)
+        ));
+
+        verify(notificationRepository, times(1))
+                .save(argThat(notification -> notification.getUser().equals(squadUser1) &&
+                        notification.getMessage().equals(creator.getName() + " has invited you to join their goal - " + savedGoal.getTitle() + "!")));
+
+        verify(invitationRepository, times(1)).save(argThat(invitation ->
                 invitation.getInvitedUser().equals(squadUser2) &&
                         invitation.getInviter().equals(creator) &&
                         invitation.getGoal().equals(savedGoal)
         ));
+
+        verify(notificationRepository, times(1))
+                .save(argThat(notification -> notification.getUser().equals(squadUser2) &&
+                        notification.getMessage().equals(creator.getName() + " has invited you to join their goal - " + savedGoal.getTitle() + "!")));
     }
 
     @Test
@@ -202,6 +216,10 @@ public class GoalControllerIntegrationTest {
                         invitation.getInviter().equals(creator) &&
                         invitation.getGoal().equals(savedGoal)
         ));
+
+        verify(notificationRepository, times(1))
+                .save(argThat(notification -> notification.getUser().equals(squadUser) &&
+                        notification.getMessage().equals(creator.getName() + " has invited you to join their goal - " + savedGoal.getTitle() + "!")));
     }
 
     @Test

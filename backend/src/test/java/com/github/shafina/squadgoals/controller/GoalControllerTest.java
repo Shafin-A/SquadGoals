@@ -6,10 +6,7 @@ import com.github.shafina.squadgoals.enums.Frequency;
 import com.github.shafina.squadgoals.model.Goal;
 import com.github.shafina.squadgoals.model.Tag;
 import com.github.shafina.squadgoals.model.User;
-import com.github.shafina.squadgoals.repository.GoalRepository;
-import com.github.shafina.squadgoals.repository.InvitationRepository;
-import com.github.shafina.squadgoals.repository.TagRepository;
-import com.github.shafina.squadgoals.repository.UserRepository;
+import com.github.shafina.squadgoals.repository.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -31,6 +28,7 @@ class GoalControllerTest {
     private UserRepository userRepository;
     private TagRepository tagRepository;
     private InvitationRepository invitationRepository;
+    private NotificationRepository notificationRepository;
     private GoalController goalController;
     private Authentication authentication;
 
@@ -40,8 +38,9 @@ class GoalControllerTest {
         userRepository = mock(UserRepository.class);
         tagRepository = mock(TagRepository.class);
         invitationRepository = mock(InvitationRepository.class);
+        notificationRepository = mock(NotificationRepository.class);
         authentication = mock(Authentication.class);
-        goalController = new GoalController(goalRepository, userRepository, tagRepository, invitationRepository);
+        goalController = new GoalController(goalRepository, userRepository, tagRepository, invitationRepository, notificationRepository);
     }
 
     @Test
@@ -105,6 +104,10 @@ class GoalControllerTest {
                 .save(argThat(invitation -> invitation.getInvitedUser().equals(squadUser) &&
                         invitation.getInviter().equals(creator) &&
                         invitation.getGoal().equals(savedGoal)));
+
+        verify(notificationRepository, times(1))
+                .save(argThat(notification -> notification.getUser().equals(squadUser) &&
+                        notification.getMessage().equals(creator.getName() + " has invited you to join their goal - " + savedGoal.getTitle() + "!")));
     }
 
     @Test
@@ -146,9 +149,9 @@ class GoalControllerTest {
 
         Goal savedGoal = new Goal();
         savedGoal.setId(200L);
-        savedGoal.setTitle("Read Books");
-        savedGoal.setDescription("Read 30 minutes daily");
-        savedGoal.setTimezone("America/New_York");
+        savedGoal.setTitle("Learn Guitar");
+        savedGoal.setDescription("Practice chords daily");
+        savedGoal.setTimezone("America/Chicago");
         savedGoal.setStartAt(LocalDateTime.now());
         savedGoal.setFrequency(Frequency.DAILY);
         savedGoal.setTags(Set.of(tag1, tag2));
@@ -173,6 +176,9 @@ class GoalControllerTest {
                 .save(argThat(invitation -> invitation.getInvitedUser().equals(squadUser) &&
                         invitation.getInviter().equals(creator) &&
                         invitation.getGoal().equals(savedGoal)));
+        verify(notificationRepository, times(1))
+                .save(argThat(notification -> notification.getUser().equals(squadUser) &&
+                        notification.getMessage().equals(creator.getName() + " has invited you to join their goal - " + savedGoal.getTitle() + "!")));
     }
 
     @Test

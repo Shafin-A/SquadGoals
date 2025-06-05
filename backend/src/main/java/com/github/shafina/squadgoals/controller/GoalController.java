@@ -3,14 +3,8 @@ package com.github.shafina.squadgoals.controller;
 import com.github.shafina.squadgoals.dto.CreateGoalRequest;
 import com.github.shafina.squadgoals.dto.GoalDTO;
 import com.github.shafina.squadgoals.enums.Status;
-import com.github.shafina.squadgoals.model.Goal;
-import com.github.shafina.squadgoals.model.Invitation;
-import com.github.shafina.squadgoals.model.Tag;
-import com.github.shafina.squadgoals.model.User;
-import com.github.shafina.squadgoals.repository.GoalRepository;
-import com.github.shafina.squadgoals.repository.InvitationRepository;
-import com.github.shafina.squadgoals.repository.TagRepository;
-import com.github.shafina.squadgoals.repository.UserRepository;
+import com.github.shafina.squadgoals.model.*;
+import com.github.shafina.squadgoals.repository.*;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -33,13 +28,15 @@ public class GoalController {
     private final UserRepository userRepository;
     private final TagRepository tagRepository;
     private final InvitationRepository invitationRepository;
+    private final NotificationRepository notificationRepository;
 
     public GoalController(GoalRepository goalRepository, UserRepository userRepository, TagRepository tagRepository,
-            InvitationRepository invitationRepository) {
+                          InvitationRepository invitationRepository, NotificationRepository notificationRepository) {
         this.goalRepository = goalRepository;
         this.userRepository = userRepository;
         this.tagRepository = tagRepository;
         this.invitationRepository = invitationRepository;
+        this.notificationRepository = notificationRepository;
     }
 
     @PostMapping
@@ -92,6 +89,12 @@ public class GoalController {
                     invitation.setInviter(creator);
                     invitation.setStatus(Status.PENDING);
                     invitationRepository.save(invitation);
+
+                    Notification notification = new Notification();
+                    notification.setMessage(creator.getName() + " has invited you to join their goal - " + goal.getTitle() + "!");
+                    notification.setUser(invitedUser);
+                    notificationRepository.save(notification);
+
                 });
 
         return ResponseEntity.status(HttpStatus.CREATED).body(GoalDTO.from(savedGoal));
