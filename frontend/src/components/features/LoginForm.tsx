@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/firebase";
 import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export function LoginForm({
   className,
@@ -23,6 +24,9 @@ export function LoginForm({
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   const handleLogin = async (email: string, password: string) => {
     try {
@@ -40,7 +44,14 @@ export function LoginForm({
       }
 
       const idToken = await user.getIdToken();
-      console.log("ID Token:", idToken);
+
+      document.cookie = `idToken=${idToken}; path=/; max-age=${
+        60 * 60 * 24 * 7
+      }; samesite=strict`;
+
+      const redirectPath = searchParams.get("redirect") || "/";
+
+      router.replace(redirectPath);
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message || "Failed to login");
