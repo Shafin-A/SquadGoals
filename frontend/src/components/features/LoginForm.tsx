@@ -68,6 +68,8 @@ export function LoginForm({
     handleLogin(email, password);
   };
 
+  // throw new Promise((resolve) => setTimeout(resolve, 2000));
+
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
