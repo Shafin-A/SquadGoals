@@ -21,6 +21,7 @@ import { auth } from "@/firebase";
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { createUser } from "@/api/user";
+import Link from "next/link";
 
 export function SignUpForm({
   className,
@@ -175,9 +176,9 @@ export function SignUpForm({
             </div>
             <div className="mt-4 text-center text-sm">
               Already have an account?{" "}
-              <a href="/login" className="underline underline-offset-4">
+              <Link href="/login" className="underline underline-offset-4">
                 Login
-              </a>
+              </Link>
             </div>
           </form>
         </CardContent>
