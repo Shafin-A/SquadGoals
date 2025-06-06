@@ -18,6 +18,7 @@ export default defineConfig([
   pluginReact.configs.flat.recommended,
   {
     rules: {
+      "react/react-in-jsx-scope": "off",
       "no-console": ["error", { allow: ["warn", "error"] }],
     },
   },
