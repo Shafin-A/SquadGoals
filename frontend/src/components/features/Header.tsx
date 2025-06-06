@@ -12,8 +12,30 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { auth } from "@/firebase";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function Header() {
+  const router = useRouter();
+  const [user, setUser] = useState(() => auth.currentUser);
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(setUser);
+    return () => unsubscribe();
+  }, []);
+
+  const isAuthenticated = !!user;
+
+  const handleSignOut = async () => {
+    try {
+      await auth.signOut();
+      router.push("/");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
+
   return (
     <header className="flex items-center justify-between p-4 border-b">
       <Link href="/" className="flex items-center space-x-2">
@@ -37,15 +59,18 @@ export default function Header() {
             <Link href="/">Home</Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link href="/squads">Squads</Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
             <Link href="/goals">Goals</Link>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem asChild>
-            <Link href="/signup">Sign Up</Link>
-          </DropdownMenuItem>
+          {isAuthenticated ? (
+            <DropdownMenuItem onSelect={handleSignOut}>
+              Sign Out
+            </DropdownMenuItem>
+          ) : (
+            <DropdownMenuItem asChild>
+              <Link href="/signup">Sign Up</Link>
+            </DropdownMenuItem>
+          )}
           <DropdownMenuSeparator />
           <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
             <ModeToggle />
@@ -59,15 +84,18 @@ export default function Header() {
             <Link href="/">Home</Link>
           </li>
           <li>
-            <Link href="/squads">Squads</Link>
-          </li>
-          <li>
             <Link href="/goals">Goals</Link>
           </li>
           <li>
-            <Button variant="outline" size="sm">
-              <Link href="/signup">Sign Up</Link>
-            </Button>
+            {isAuthenticated ? (
+              <Button variant="outline" size="sm" onClick={handleSignOut}>
+                Sign Out
+              </Button>
+            ) : (
+              <Button variant="outline" size="sm">
+                <Link href="/signup">Sign Up</Link>
+              </Button>
+            )}
           </li>
           <li>
             <ModeToggle />
