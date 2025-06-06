@@ -25,6 +25,7 @@ export const Goals = () => {
   });
 
   const onSubmit = (values: { search: string }) => {
+    // eslint-disable-next-line no-console
     console.log("Search submitted:", values.search);
   };
 
