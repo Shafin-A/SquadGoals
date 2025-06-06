@@ -15,6 +15,8 @@ export default async function Home() {
     queryFn: () => fetchRecentGoals({}),
   });
 
+  console.log("ss");
+  console.log("ss2");
   return (
     <div className="min-h-screen flex">
       <main className="mx-4 my-10 md:mx-20 md:my-20 w-full">
