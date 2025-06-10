@@ -48,12 +48,12 @@ public class NotificationControllerTest {
     }
 
     @Test
-    void getUserInvitations_shouldReturnNotifications() {
+    void getUserNotifications_shouldReturnNotifications() {
         when(authentication.getName()).thenReturn("firebase-uid-1");
         when(userRepository.findByFirebaseUid("firebase-uid-1")).thenReturn(Optional.of(user));
         when(notificationRepository.findByUser(user)).thenReturn(List.of(notification));
 
-        ResponseEntity<List<NotificationDTO>> response = notificationController.getUserInvitations(authentication);
+        ResponseEntity<List<NotificationDTO>> response = notificationController.getUserNotifications(true, 10, authentication);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         List<NotificationDTO> body = response.getBody();
@@ -65,12 +65,12 @@ public class NotificationControllerTest {
     }
 
     @Test
-    void getUserInvitations_shouldReturnEmptyList_whenNoNotifications() {
+    void getUserNotifications_shouldReturnEmptyList_whenNoNotifications() {
         when(authentication.getName()).thenReturn("firebase-uid-1");
         when(userRepository.findByFirebaseUid("firebase-uid-1")).thenReturn(Optional.of(user));
         when(notificationRepository.findByUser(user)).thenReturn(Collections.emptyList());
 
-        ResponseEntity<List<NotificationDTO>> response = notificationController.getUserInvitations(authentication);
+        ResponseEntity<List<NotificationDTO>> response = notificationController.getUserNotifications(true, 10, authentication);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         List<NotificationDTO> body = response.getBody();
@@ -79,19 +79,19 @@ public class NotificationControllerTest {
     }
 
     @Test
-    void getUserInvitations_shouldThrowNotFound_whenUserNotFound() {
+    void getUserNotifications_shouldThrowNotFound_whenUserNotFound() {
         when(authentication.getName()).thenReturn("firebase-uid-1");
         when(userRepository.findByFirebaseUid("firebase-uid-1")).thenReturn(Optional.empty());
 
         ResponseStatusException exception = assertThrows(
                 ResponseStatusException.class,
-                () -> notificationController.getUserInvitations(authentication));
+                () -> notificationController.getUserNotifications(true, 10, authentication));
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
         assertEquals("User not found", exception.getReason());
     }
 
     @Test
-    void getUserInvitations_shouldReturnMultipleNotifications() {
+    void getUserNotifications_shouldReturnMultipleNotifications() {
         Notification notification2 = new Notification();
         notification2.setId(102L);
         notification2.setUser(user);
@@ -102,7 +102,7 @@ public class NotificationControllerTest {
         when(userRepository.findByFirebaseUid("firebase-uid-1")).thenReturn(Optional.of(user));
         when(notificationRepository.findByUser(user)).thenReturn(List.of(notification, notification2));
 
-        ResponseEntity<List<NotificationDTO>> response = notificationController.getUserInvitations(authentication);
+        ResponseEntity<List<NotificationDTO>> response = notificationController.getUserNotifications(true, 10, authentication);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         List<NotificationDTO> body = response.getBody();

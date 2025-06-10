@@ -1,6 +1,7 @@
 package com.github.shafina.squadgoals.controller;
 
 import com.github.shafina.squadgoals.dto.NotificationDTO;
+import com.github.shafina.squadgoals.model.Notification;
 import com.github.shafina.squadgoals.model.User;
 import com.github.shafina.squadgoals.repository.NotificationRepository;
 import com.github.shafina.squadgoals.repository.UserRepository;
@@ -9,10 +10,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/notifications")
@@ -27,17 +30,29 @@ public class NotificationController {
     }
 
     @GetMapping
-    public ResponseEntity<List<NotificationDTO>> getUserInvitations(Authentication authentication) {
+    public ResponseEntity<List<NotificationDTO>> getUserNotifications(
+            @RequestParam(defaultValue = "true") boolean recent,
+            @RequestParam(defaultValue = "10") int limit, Authentication authentication) {
         String firebaseUid = authentication.getName();
 
         User user = userRepository.findByFirebaseUid(firebaseUid)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
-        List<NotificationDTO> notifications = notificationRepository.findByUser(user)
-                .stream()
-                .map(NotificationDTO::from)
-                .toList();
+        List<Notification> notifications = notificationRepository.findByUser(user);
 
-        return ResponseEntity.ok(notifications);
+        if (recent) {
+            notifications = notifications
+                    .stream()
+                    .sorted((n1, n2) -> n2.getCreatedAt().compareTo(n1.getCreatedAt()))
+                    .limit(limit)
+                    .collect(Collectors.toList());
+        } else {
+            notifications = notifications
+                    .stream()
+                    .limit(limit)
+                    .collect(Collectors.toList());
+        }
+        
+        return ResponseEntity.ok(notifications.stream().map(NotificationDTO::from).toList());
     }
 }

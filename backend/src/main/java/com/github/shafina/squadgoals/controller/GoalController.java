@@ -92,6 +92,7 @@ public class GoalController {
                     Notification notification = new Notification();
                     notification.setMessage(creator.getName() + " has invited you to join their goal - " + goal.getTitle() + "!");
                     notification.setUser(invitedUser);
+                    notification.setSender(creator);
                     notificationRepository.save(notification);
 
                 });

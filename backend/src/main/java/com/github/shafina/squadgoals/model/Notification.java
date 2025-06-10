@@ -19,6 +19,8 @@ public class Notification {
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    private User sender;
+
     public Long getId() {
         return id;
     }
@@ -57,5 +59,13 @@ public class Notification {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public User getSender() {
+        return sender;
+    }
+
+    public void setSender(User sender) {
+        this.sender = sender;
     }
 }

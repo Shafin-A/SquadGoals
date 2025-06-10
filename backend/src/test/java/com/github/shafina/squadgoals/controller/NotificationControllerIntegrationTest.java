@@ -101,9 +101,11 @@ public class NotificationControllerIntegrationTest {
         when(userRepository.findByFirebaseUid("firebase-uid-1")).thenReturn(Optional.of(user));
         when(notificationRepository.findByUser(user)).thenReturn(List.of(notification, notification2));
 
-        mockMvc.perform(get("/api/notifications"))
+        mockMvc.perform(get("/api/notifications")
+                .param("recent", "true"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(notification.getId()))
+                .andExpect(jsonPath("$[0].message").value("Test notification"))
                 .andExpect(jsonPath("$[1].id").value(notification2.getId()))
                 .andExpect(jsonPath("$[1].message").value("Another notification"));
     }
