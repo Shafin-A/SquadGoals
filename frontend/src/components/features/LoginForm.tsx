@@ -53,9 +53,9 @@ export function LoginForm({
       const redirectPath = searchParams.get("redirect") || "/";
 
       router.replace(redirectPath);
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message || "Failed to login");
+    } catch (error_: unknown) {
+      if (error_ instanceof Error) {
+        setError(error_.message || "Failed to login");
       } else {
         setError("Failed to login");
       }

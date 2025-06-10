@@ -19,15 +19,15 @@ import { Goal } from "@/lib/types";
 import { fetchRecentGoals } from "@/api/goal";
 import { GoalItem } from "./GoalItem";
 
+const onSubmit = (values: { search: string }) => {
+  // eslint-disable-next-line no-console
+  console.log("Search submitted:", values.search);
+};
+
 export const Goals = () => {
   const form = useForm({
     defaultValues: { search: "" },
   });
-
-  const onSubmit = (values: { search: string }) => {
-    // eslint-disable-next-line no-console
-    console.log("Search submitted:", values.search);
-  };
 
   const {
     data: goals = [],

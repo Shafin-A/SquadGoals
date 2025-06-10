@@ -33,10 +33,10 @@ export function ResetPasswordForm({
 
       await sendPasswordResetEmail(auth, email);
       setMessage("Password reset email sent! Please check your inbox.");
-    } catch (err: unknown) {
+    } catch (error_: unknown) {
       setError(
-        err instanceof Error
-          ? err.message
+        error_ instanceof Error
+          ? error_.message
           : "Failed to send password reset email"
       );
     } finally {

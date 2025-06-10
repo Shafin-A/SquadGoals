@@ -49,17 +49,28 @@ export const DateTimePicker = ({
     if (!value) return;
 
     const newDate = new Date(value);
-    if (type === "hour") {
-      newDate.setHours(
-        (parseInt(newValue) % 12) + (newDate.getHours() >= 12 ? 12 : 0)
-      );
-    } else if (type === "minute") {
-      newDate.setMinutes(parseInt(newValue));
-    } else if (type === "ampm") {
-      const currentHours = newDate.getHours();
-      newDate.setHours(
-        newValue === "PM" ? currentHours + 12 : currentHours - 12
-      );
+    switch (type) {
+      case "hour": {
+        newDate.setHours(
+          (Number.parseInt(newValue) % 12) + (newDate.getHours() >= 12 ? 12 : 0)
+        );
+
+        break;
+      }
+      case "minute": {
+        newDate.setMinutes(Number.parseInt(newValue));
+
+        break;
+      }
+      case "ampm": {
+        const currentHours = newDate.getHours();
+        newDate.setHours(
+          newValue === "PM" ? currentHours + 12 : currentHours - 12
+        );
+
+        break;
+      }
+      // No default
     }
     onChange(newDate);
   };

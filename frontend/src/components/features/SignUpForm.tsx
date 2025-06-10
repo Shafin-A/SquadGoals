@@ -87,9 +87,9 @@ export function SignUpForm({
       await sendEmailVerification(user);
 
       await signOut(auth);
-    } catch (err: unknown) {
+    } catch (error: unknown) {
       setValidationError(
-        err instanceof Error ? err.message : "Failed to sign up"
+        error instanceof Error ? error.message : "Failed to sign up"
       );
     }
   };

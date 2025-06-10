@@ -22,7 +22,7 @@ export const GoalItem = ({ goal }: GoalItemProps) => (
         <span className="text-xs text-muted-foreground">{goal.timezone}</span>
       </div>
       <CardDescription className="truncate">
-        {goal.description ? goal.description : <i>No description provided.</i>}
+        {goal.description ?? <i>No description provided.</i>}
       </CardDescription>
     </CardHeader>
     <CardContent>
