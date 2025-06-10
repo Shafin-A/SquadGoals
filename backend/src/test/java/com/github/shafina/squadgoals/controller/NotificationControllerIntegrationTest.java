@@ -1,6 +1,8 @@
 package com.github.shafina.squadgoals.controller;
 
 import com.github.shafina.squadgoals.config.SecurityConfig;
+import com.github.shafina.squadgoals.enums.NotificationType;
+import com.github.shafina.squadgoals.model.Goal;
 import com.github.shafina.squadgoals.model.Notification;
 import com.github.shafina.squadgoals.model.User;
 import com.github.shafina.squadgoals.repository.NotificationRepository;
@@ -42,6 +44,7 @@ public class NotificationControllerIntegrationTest {
 
     private User user;
     private Notification notification;
+    private Goal goal;
 
     @BeforeEach
     void setup() {
@@ -49,10 +52,15 @@ public class NotificationControllerIntegrationTest {
         user.setId(1L);
         user.setFirebaseUid("firebase-uid-1");
 
+        goal = new Goal();
+        goal.setId(1L);
+        goal.setTitle("Test system title");
+
         notification = new Notification();
         notification.setId(101L);
+        notification.setNotificationType(NotificationType.SYSTEM);
+        notification.setGoal(goal);
         notification.setUser(user);
-        notification.setMessage("Test notification");
         notification.setRead(false);
     }
 
@@ -66,7 +74,8 @@ public class NotificationControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$[0].id").value(notification.getId()))
-                .andExpect(jsonPath("$[0].message").value("Test notification"));
+                .andExpect(jsonPath("$[0].notificationType").value(NotificationType.SYSTEM.name()))
+                .andExpect(jsonPath("$[0].goalTitle").value(goal.getTitle()));
     }
 
     @Test
@@ -92,10 +101,15 @@ public class NotificationControllerIntegrationTest {
     @Test
     @WithMockUser(username = "firebase-uid-1")
     void getNotifications_shouldReturnMultipleNotifications() throws Exception {
+        Goal goal2 = new Goal();
+        goal2.setId(2L);
+        goal2.setTitle("Test invite title");
+
         Notification notification2 = new Notification();
         notification2.setId(102L);
+        notification2.setNotificationType(NotificationType.INVITE);
         notification2.setUser(user);
-        notification2.setMessage("Another notification");
+        notification2.setGoal(goal2);
         notification2.setRead(true);
         notification2.setCreatedAt(notification2.getCreatedAt().plusDays(1));
 
@@ -106,9 +120,11 @@ public class NotificationControllerIntegrationTest {
                 .param("recent", "true"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(notification2.getId()))
-                .andExpect(jsonPath("$[0].message").value("Another notification"))
+                .andExpect(jsonPath("$[0].notificationType").value(NotificationType.INVITE.name()))
+                .andExpect(jsonPath("$[0].goalTitle").value(goal2.getTitle()))
                 .andExpect(jsonPath("$[1].id").value(notification.getId()))
-                .andExpect(jsonPath("$[1].message").value("Test notification"));
+                .andExpect(jsonPath("$[1].notificationType").value(NotificationType.SYSTEM.name()))
+                .andExpect(jsonPath("$[1].goalTitle").value(goal.getTitle()));
     }
 
     @Test
@@ -133,18 +149,6 @@ public class NotificationControllerIntegrationTest {
         mockMvc.perform(get("/api/notifications"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].read").value(true));
-    }
-
-    @Test
-    @WithMockUser(username = "firebase-uid-1")
-    void getNotifications_shouldReturnCorrectMessage() throws Exception {
-        notification.setMessage("Welcome to SquadGoals!");
-        when(userRepository.findByFirebaseUid("firebase-uid-1")).thenReturn(Optional.of(user));
-        when(notificationRepository.findByUser(user)).thenReturn(List.of(notification));
-
-        mockMvc.perform(get("/api/notifications"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].message").value("Welcome to SquadGoals!"));
     }
 
     @Test

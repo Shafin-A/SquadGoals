@@ -1,5 +1,6 @@
 package com.github.shafina.squadgoals.service;
 
+import com.github.shafina.squadgoals.enums.NotificationType;
 import com.github.shafina.squadgoals.model.Goal;
 import com.github.shafina.squadgoals.model.Notification;
 import com.github.shafina.squadgoals.model.User;
@@ -30,20 +31,24 @@ public class ReminderService {
 
         for (Goal goal : dailyGoals) {
             Set<User> squad = goal.getSquad();
-            String msg = "Reminder: Your goal '" + goal.getTitle() + "' is due today!";
 
             for (User user : squad) {
-                boolean exists = notificationRepository.existsByUserAndMessageAndCreatedAtBetween(
-                        user, msg, LocalDateTime.now().toLocalDate().atStartOfDay(),
-                        LocalDateTime.now().toLocalDate().atTime(23, 59, 59));
+                boolean exists = notificationRepository.existsByUserAndGoalAndNotificationTypeAndCreatedAtBetween(
+                        user,
+                        goal,
+                        NotificationType.SYSTEM,
+                        LocalDateTime.now().toLocalDate().atStartOfDay(),
+                        LocalDateTime.now().toLocalDate().atTime(23, 59, 59)
+                );
 
                 if (exists) {
                     continue;
                 }
 
                 Notification notif = new Notification();
+                notif.setNotificationType(NotificationType.SYSTEM);
                 notif.setUser(user);
-                notif.setMessage(msg);
+                notif.setGoal(goal);
 
                 notificationRepository.save(notif);
 

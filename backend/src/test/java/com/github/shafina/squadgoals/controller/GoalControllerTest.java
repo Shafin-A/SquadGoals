@@ -107,7 +107,8 @@ class GoalControllerTest {
 
         verify(notificationRepository, times(1))
                 .save(argThat(notification -> notification.getUser().equals(squadUser) &&
-                        notification.getMessage().equals(creator.getName() + " has invited you to join their goal - " + savedGoal.getTitle() + "!")));
+                        notification.getSender().equals(creator) &&
+                        notification.getGoal().equals(savedGoal)));
     }
 
     @Test
@@ -178,7 +179,8 @@ class GoalControllerTest {
                         invitation.getGoal().equals(savedGoal)));
         verify(notificationRepository, times(1))
                 .save(argThat(notification -> notification.getUser().equals(squadUser) &&
-                        notification.getMessage().equals(creator.getName() + " has invited you to join their goal - " + savedGoal.getTitle() + "!")));
+                        notification.getSender().equals(creator) &&
+                        notification.getGoal().equals(savedGoal)));
     }
 
     @Test

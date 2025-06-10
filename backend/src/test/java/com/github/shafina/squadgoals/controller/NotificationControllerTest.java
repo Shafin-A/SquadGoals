@@ -1,6 +1,8 @@
 package com.github.shafina.squadgoals.controller;
 
 import com.github.shafina.squadgoals.dto.NotificationDTO;
+import com.github.shafina.squadgoals.enums.NotificationType;
+import com.github.shafina.squadgoals.model.Goal;
 import com.github.shafina.squadgoals.model.Notification;
 import com.github.shafina.squadgoals.model.User;
 import com.github.shafina.squadgoals.repository.NotificationRepository;
@@ -40,10 +42,15 @@ public class NotificationControllerTest {
         user.setId(1L);
         user.setFirebaseUid("firebase-uid-1");
 
+        Goal goal = new Goal();
+        goal.setId(1L);
+        goal.setTitle("Test title");
+
         notification = new Notification();
         notification.setId(101L);
+        notification.setNotificationType(NotificationType.SYSTEM);
         notification.setUser(user);
-        notification.setMessage("Test notification");
+        notification.setGoal(goal);
         notification.setRead(false);
     }
 
@@ -61,7 +68,8 @@ public class NotificationControllerTest {
         assertEquals(1, body.size());
         NotificationDTO dto = body.get(0);
         assertEquals(notification.getId(), dto.id());
-        assertEquals(notification.getMessage(), dto.message());
+        assertEquals(notification.getUser().getName(), dto.senderName());
+        assertEquals(notification.getGoal().getTitle(), dto.goalTitle());
     }
 
     @Test
@@ -92,10 +100,15 @@ public class NotificationControllerTest {
 
     @Test
     void getUserNotifications_shouldReturnMultipleNotifications() {
+        Goal goal2 = new Goal();
+        goal2.setId(2L);
+        goal2.setTitle("Test title 2");
+
         Notification notification2 = new Notification();
         notification2.setId(102L);
+        notification2.setNotificationType(NotificationType.SYSTEM);
         notification2.setUser(user);
-        notification2.setMessage("Another notification");
+        notification2.setGoal(goal2);
         notification2.setRead(true);
         notification2.setCreatedAt(notification2.getCreatedAt().plusDays(1));
 
@@ -115,9 +128,9 @@ public class NotificationControllerTest {
         NotificationDTO dto2 = body.get(1);
 
         assertEquals(notification2.getId(), dto1.id());
-        assertEquals("Another notification", dto1.message());
+        assertEquals(notification2.getUser().getName(), dto1.senderName());
 
         assertEquals(notification.getId(), dto2.id());
-        assertEquals("Test notification", dto2.message());
+        assertEquals(notification.getUser().getName(), dto2.senderName());
     }
 }

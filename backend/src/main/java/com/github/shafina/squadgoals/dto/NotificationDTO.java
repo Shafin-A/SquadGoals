@@ -1,5 +1,6 @@
 package com.github.shafina.squadgoals.dto;
 
+import com.github.shafina.squadgoals.enums.NotificationType;
 import com.github.shafina.squadgoals.model.Notification;
 
 import java.time.LocalDateTime;
@@ -7,10 +8,12 @@ import java.util.Optional;
 
 public record NotificationDTO(
         Long id,
-        String message,
+        NotificationType notificationType,
         boolean read,
         LocalDateTime createdAt,
-        UserDTO sender) {
+        String senderName,
+        String senderProfilePicture,
+        String goalTitle) {
     public static NotificationDTO from(Notification notification) {
         UserDTO senderDTO = Optional.ofNullable(notification.getSender())
                 .map(UserDTO::from)
@@ -18,10 +21,12 @@ public record NotificationDTO(
 
         return new NotificationDTO(
                 notification.getId(),
-                notification.getMessage(),
+                notification.getNotificationType(),
                 notification.isRead(),
                 notification.getCreatedAt(),
-                senderDTO
+                senderDTO != null ? senderDTO.name() : null,
+                null,
+                notification.getGoal().getTitle()
         );
     }
 }

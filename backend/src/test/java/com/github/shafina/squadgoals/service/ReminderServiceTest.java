@@ -14,7 +14,6 @@ import java.util.*;
 
 import static org.mockito.Mockito.*;
 
-
 public class ReminderServiceTest {
 
     private GoalRepository goalRepository;
@@ -51,7 +50,8 @@ public class ReminderServiceTest {
         when(goal.getNextDueAt()).thenReturn(LocalDateTime.now());
 
         when(goalRepository.findGoalsDueToday(any())).thenReturn(List.of(goal));
-        when(notificationRepository.existsByUserAndMessageAndCreatedAtBetween(any(), any(), any(), any()))
+        when(notificationRepository.existsByUserAndGoalAndNotificationTypeAndCreatedAtBetween(any(), any(), any(),
+                any(), any()))
                 .thenReturn(false);
 
         reminderService.sendDailyReminders();
@@ -71,7 +71,8 @@ public class ReminderServiceTest {
         when(goal.getNextDueAt()).thenReturn(LocalDateTime.now());
 
         when(goalRepository.findGoalsDueToday(any())).thenReturn(List.of(goal));
-        when(notificationRepository.existsByUserAndMessageAndCreatedAtBetween(any(), any(), any(), any()))
+        when(notificationRepository.existsByUserAndGoalAndNotificationTypeAndCreatedAtBetween(any(), any(), any(),
+                any(), any()))
                 .thenReturn(true);
 
         reminderService.sendDailyReminders();
@@ -102,7 +103,8 @@ public class ReminderServiceTest {
         when(goal.getNextDueAt()).thenReturn(LocalDateTime.now());
 
         when(goalRepository.findGoalsDueToday(any())).thenReturn(List.of(goal));
-        when(notificationRepository.existsByUserAndMessageAndCreatedAtBetween(any(), any(), any(), any()))
+        when(notificationRepository.existsByUserAndGoalAndNotificationTypeAndCreatedAtBetween(any(), any(), any(),
+                any(), any()))
                 .thenReturn(false);
 
         reminderService.sendDailyReminders();

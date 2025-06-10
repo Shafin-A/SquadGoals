@@ -1,5 +1,6 @@
 package com.github.shafina.squadgoals.model;
 
+import com.github.shafina.squadgoals.enums.NotificationType;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -13,13 +14,18 @@ public class Notification {
     @ManyToOne
     private User user;
 
-    private String message;
+    @Enumerated(EnumType.STRING)
+    private NotificationType notificationType;
 
     private boolean read = false;
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @ManyToOne
     private User sender;
+
+    @ManyToOne
+    private Goal goal;
 
     public Long getId() {
         return id;
@@ -35,14 +41,6 @@ public class Notification {
 
     public void setUser(User user) {
         this.user = user;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
     }
 
     public boolean isRead() {
@@ -67,5 +65,34 @@ public class Notification {
 
     public void setSender(User sender) {
         this.sender = sender;
+    }
+
+    public NotificationType getNotificationType() {
+        return notificationType;
+    }
+
+    public void setNotificationType(NotificationType notificationType) {
+        this.notificationType = notificationType;
+    }
+
+    public Goal getGoal() {
+        return goal;
+    }
+
+    public void setGoal(Goal goal) {
+        this.goal = goal;
+    }
+
+    @Override
+    public String toString() {
+        return "Notification{" +
+                "id=" + id +
+                ", user=" + user +
+                ", notificationType=" + notificationType +
+                ", read=" + read +
+                ", createdAt=" + createdAt +
+                ", sender=" + sender +
+                ", goal=" + goal +
+                '}';
     }
 }

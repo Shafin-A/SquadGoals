@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.shafina.squadgoals.config.SecurityConfig;
 import com.github.shafina.squadgoals.dto.CreateGoalRequest;
 import com.github.shafina.squadgoals.enums.Frequency;
+import com.github.shafina.squadgoals.enums.NotificationType;
 import com.github.shafina.squadgoals.model.Goal;
 import com.github.shafina.squadgoals.model.Tag;
 import com.github.shafina.squadgoals.model.User;
@@ -111,41 +112,37 @@ public class GoalControllerIntegrationTest {
         when(goalRepository.save(any(Goal.class))).thenReturn(savedGoal);
 
         mockMvc.perform(post("/api/goals")
-                        .with(user(firebaseUid).roles("USER"))
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                .with(user(firebaseUid).roles("USER"))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.title").value("Read Books"))
                 .andExpect(jsonPath("$.description").value("Read 30 minutes daily"))
                 .andExpect(jsonPath("$.timezone").value("America/New_York"))
                 .andExpect(jsonPath("$.id").value(100L));
 
-        verify(invitationRepository, times(1)).save(argThat(invitation ->
-                invitation.getInvitedUser().equals(squadUser1) &&
+        verify(invitationRepository, times(1))
+                .save(argThat(invitation -> invitation.getInvitedUser().equals(squadUser1) &&
                         invitation.getInviter().equals(creator) &&
-                        invitation.getGoal().equals(savedGoal)
-        ));
-
-        verify(invitationRepository, times(1)).save(argThat(invitation ->
-                invitation.getInvitedUser().equals(squadUser1) &&
-                        invitation.getInviter().equals(creator) &&
-                        invitation.getGoal().equals(savedGoal)
-        ));
+                        invitation.getGoal().equals(savedGoal)));
 
         verify(notificationRepository, times(1))
                 .save(argThat(notification -> notification.getUser().equals(squadUser1) &&
-                        notification.getMessage().equals(creator.getName() + " has invited you to join their goal - " + savedGoal.getTitle() + "!")));
+                        notification.getNotificationType().equals(NotificationType.INVITE) &&
+                        notification.getSender().equals(creator) &&
+                        notification.getGoal().equals(savedGoal)));
 
-        verify(invitationRepository, times(1)).save(argThat(invitation ->
-                invitation.getInvitedUser().equals(squadUser2) &&
+        verify(invitationRepository, times(1))
+                .save(argThat(invitation -> invitation.getInvitedUser().equals(squadUser2) &&
                         invitation.getInviter().equals(creator) &&
-                        invitation.getGoal().equals(savedGoal)
-        ));
+                        invitation.getGoal().equals(savedGoal)));
 
         verify(notificationRepository, times(1))
                 .save(argThat(notification -> notification.getUser().equals(squadUser2) &&
-                        notification.getMessage().equals(creator.getName() + " has invited you to join their goal - " + savedGoal.getTitle() + "!")));
+                        notification.getNotificationType().equals(NotificationType.INVITE) &&
+                        notification.getSender().equals(creator) &&
+                        notification.getGoal().equals(savedGoal)));
     }
 
     @Test
@@ -198,10 +195,10 @@ public class GoalControllerIntegrationTest {
         when(goalRepository.save(any(Goal.class))).thenReturn(savedGoal);
 
         mockMvc.perform(post("/api/goals")
-                        .with(user(firebaseUid).roles("USER"))
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                .with(user(firebaseUid).roles("USER"))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.title").value("Learn Guitar"))
                 .andExpect(jsonPath("$.description").value("Practice chords daily"))
@@ -211,15 +208,15 @@ public class GoalControllerIntegrationTest {
         verify(tagRepository, times(1)).save(argThat(tag -> tag.getName().equals("guitar")));
         verify(tagRepository, times(1)).save(argThat(tag -> tag.getName().equals("music")));
 
-        verify(invitationRepository, times(1)).save(argThat(invitation ->
-                invitation.getInvitedUser().equals(squadUser) &&
+        verify(invitationRepository, times(1))
+                .save(argThat(invitation -> invitation.getInvitedUser().equals(squadUser) &&
                         invitation.getInviter().equals(creator) &&
-                        invitation.getGoal().equals(savedGoal)
-        ));
+                        invitation.getGoal().equals(savedGoal)));
 
         verify(notificationRepository, times(1))
                 .save(argThat(notification -> notification.getUser().equals(squadUser) &&
-                        notification.getMessage().equals(creator.getName() + " has invited you to join their goal - " + savedGoal.getTitle() + "!")));
+                        notification.getSender().equals(creator) &&
+                        notification.getGoal().equals(savedGoal)));
     }
 
     @Test
@@ -238,10 +235,10 @@ public class GoalControllerIntegrationTest {
         when(userRepository.findByFirebaseUid(firebaseUid)).thenReturn(Optional.empty());
 
         mockMvc.perform(post("/api/goals")
-                        .with(user(firebaseUid).roles("USER"))
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                .with(user(firebaseUid).roles("USER"))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound());
     }
 
@@ -265,10 +262,10 @@ public class GoalControllerIntegrationTest {
         when(userRepository.findById(999L)).thenReturn(Optional.empty());
 
         mockMvc.perform(post("/api/goals")
-                        .with(user(firebaseUid).roles("USER"))
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                .with(user(firebaseUid).roles("USER"))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound());
     }
 
@@ -278,9 +275,9 @@ public class GoalControllerIntegrationTest {
         CreateGoalRequest request = new CreateGoalRequest();
 
         mockMvc.perform(post("/api/goals")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
     }
 
@@ -297,8 +294,8 @@ public class GoalControllerIntegrationTest {
         request.setSquadUserIds(Set.of(2L, 3L));
 
         mockMvc.perform(post("/api/goals")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -324,10 +321,10 @@ public class GoalControllerIntegrationTest {
         });
 
         mockMvc.perform(post("/api/goals")
-                        .with(user(firebaseUid).roles("USER"))
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                .with(user(firebaseUid).roles("USER"))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated());
     }
 
@@ -353,10 +350,10 @@ public class GoalControllerIntegrationTest {
         });
 
         mockMvc.perform(post("/api/goals")
-                        .with(user(firebaseUid).roles("USER"))
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                .with(user(firebaseUid).roles("USER"))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated());
     }
 
@@ -382,10 +379,10 @@ public class GoalControllerIntegrationTest {
         });
 
         mockMvc.perform(post("/api/goals")
-                        .with(user(firebaseUid).roles("USER"))
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                .with(user(firebaseUid).roles("USER"))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated());
     }
 
@@ -411,7 +408,7 @@ public class GoalControllerIntegrationTest {
         when(goalRepository.findByIsPublicTrue()).thenReturn(List.of(publicGoal));
 
         mockMvc.perform(get("/api/goals")
-                        .contentType(MediaType.APPLICATION_JSON))
+                .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].title").value("Public Goal"))
                 .andExpect(jsonPath("$[0].id").value(1L));
