@@ -15,6 +15,7 @@ import {
 import { auth } from "@/firebase";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { NotificationDropdown } from "./NotificationDropdown";
 
 export default function Header() {
   const router = useRouter();
@@ -30,6 +31,7 @@ export default function Header() {
   const handleSignOut = async () => {
     try {
       await auth.signOut();
+      document.cookie = "idToken=; path=/; max-age=0";
       router.push("/");
     } catch (error) {
       console.error("Logout failed:", error);
@@ -43,40 +45,46 @@ export default function Header() {
         <h1 className="text-2xl font-bold">SquadGoals</h1>
       </Link>
       {/* Hamburger nav for mobile */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            className="lg:hidden p-2"
-            variant="outline"
-            size="icon"
-            aria-label="Toggle navigation"
-          >
-            <Menu />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent className="lg:hidden" align="end">
-          <DropdownMenuItem asChild>
-            <Link href="/">Home</Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href="/goals">Goals</Link>
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          {isAuthenticated ? (
-            <DropdownMenuItem onSelect={handleSignOut}>
-              Sign Out
-            </DropdownMenuItem>
-          ) : (
+      <div className="flex space-x-4 items-center">
+        {isAuthenticated && (
+          <NotificationDropdown align="end" buttonClassName="lg:hidden" />
+        )}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              className="lg:hidden p-2"
+              variant="outline"
+              size="icon"
+              aria-label="Toggle navigation"
+            >
+              <Menu />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="lg:hidden" align="end">
             <DropdownMenuItem asChild>
-              <Link href="/signup">Sign Up</Link>
+              <Link href="/">Home</Link>
             </DropdownMenuItem>
-          )}
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-            <ModeToggle />
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+            <DropdownMenuItem asChild>
+              <Link href="/goals">Goals</Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            {isAuthenticated ? (
+              <DropdownMenuItem onSelect={handleSignOut}>
+                Sign Out
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem asChild>
+                <Link href="/signup">Sign Up</Link>
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+              <ModeToggle />
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
       {/* Desktop nav */}
       <nav className="hidden lg:block">
         <ul className="flex space-x-4 items-center">
@@ -86,13 +94,18 @@ export default function Header() {
           <li>
             <Link href="/goals">Goals</Link>
           </li>
+          {isAuthenticated && (
+            <li>
+              <NotificationDropdown />
+            </li>
+          )}
           <li>
             {isAuthenticated ? (
               <Button variant="outline" size="sm" onClick={handleSignOut}>
                 Sign Out
               </Button>
             ) : (
-              <Button variant="outline" size="sm">
+              <Button asChild variant="outline" size="sm">
                 <Link href="/signup">Sign Up</Link>
               </Button>
             )}

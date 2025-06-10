@@ -23,3 +23,11 @@ export type Goal = {
   updatedAt: Date;
   nextDueAt: Date;
 };
+
+export type Notification = {
+  id: number;
+  message: string;
+  createdAt: Date;
+  read: boolean;
+  sender?: User;
+};
