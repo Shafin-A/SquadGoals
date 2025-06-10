@@ -97,6 +97,7 @@ public class NotificationControllerTest {
         notification2.setUser(user);
         notification2.setMessage("Another notification");
         notification2.setRead(true);
+        notification2.setCreatedAt(notification2.getCreatedAt().plusDays(1));
 
         when(authentication.getName()).thenReturn("firebase-uid-1");
         when(userRepository.findByFirebaseUid("firebase-uid-1")).thenReturn(Optional.of(user));
@@ -106,12 +107,17 @@ public class NotificationControllerTest {
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         List<NotificationDTO> body = response.getBody();
+
         assertNotNull(body);
         assertEquals(2, body.size());
+
         NotificationDTO dto1 = body.get(0);
         NotificationDTO dto2 = body.get(1);
-        assertEquals(notification.getId(), dto1.id());
-        assertEquals(notification2.getId(), dto2.id());
-        assertEquals("Another notification", dto2.message());
+
+        assertEquals(notification2.getId(), dto1.id());
+        assertEquals("Another notification", dto1.message());
+
+        assertEquals(notification.getId(), dto2.id());
+        assertEquals("Test notification", dto2.message());
     }
 }
