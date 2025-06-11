@@ -53,13 +53,16 @@ export const markNotificationAsRead = async (
 };
 
 export const markAllNotificationsAsRead = async (idToken: string) => {
-  const res = await fetch(`http://localhost:8080/notifications/mark-all-read`, {
-    method: "PATCH",
-    headers: {
-      Authorization: `Bearer ${idToken}`,
-      "Content-Type": "application/json",
-    },
-  });
+  const res = await fetch(
+    `http://localhost:8080/api/notifications/mark-all-read`,
+    {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${idToken}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
 
   if (!res.ok) {
     throw new Error("Failed to mark all notifications as read");
