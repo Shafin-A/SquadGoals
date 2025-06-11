@@ -85,7 +85,7 @@ export function NotificationDropdown({
         <DropdownMenuLabel>Notifications</DropdownMenuLabel>
         <DropdownMenuSeparator />
         {notificationsLoading ? (
-          <DropdownMenuItem>
+          <DropdownMenuItem className="items-center justify-center">
             <Loader2 className="w-4 h-4 animate-spin" />
           </DropdownMenuItem>
         ) : notifications && notifications.length > 0 ? (
@@ -94,57 +94,80 @@ export function NotificationDropdown({
               key={notification.id || i}
               className="flex items-center gap-3 py-2"
             >
-              <Avatar className="h-8 w-8">
-                <AvatarImage
-                  src={notification.senderProfilePicture}
-                  alt={notification.senderName || "User"}
-                />
-                <AvatarFallback>
-                  {notification.notificationType ===
-                  NOTIFICATION_TYPE.SYSTEM ? (
-                    <Settings className="w-4 h-4 text-muted-foreground" />
-                  ) : (
-                    (notification.senderName || "?")
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")
-                      .toUpperCase()
-                      .slice(0, 2)
-                  )}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex flex-col">
-                <span className="text-xs dark:text-muted-foreground">
-                  {notification.notificationType ===
-                  NOTIFICATION_TYPE.INVITE ? (
-                    <>
-                      <span className="font-bold">
-                        {notification.senderName}
-                      </span>{" "}
-                      invited you to join the goal&nbsp;
-                      <span className="font-bold">
-                        &quot;{notification.goalTitle}&quot;
+              {notification.notificationType === NOTIFICATION_TYPE.INVITE ? (
+                <DropdownMenuItem asChild>
+                  <Link
+                    href="/invitations"
+                    className="flex items-center gap-3 py-2 no-underline hover:bg-accent"
+                  >
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage
+                        src={notification.senderProfilePicture}
+                        alt={notification.senderName || "User"}
+                      />
+                      <AvatarFallback>
+                        {(notification.senderName || "?")
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")
+                          .toUpperCase()
+                          .slice(0, 2)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col">
+                      <span className="text-xs dark:text-muted-foreground">
+                        <span className="font-bold">
+                          {notification.senderName}
+                        </span>{" "}
+                        invited you to join the goal&nbsp;
+                        <span className="font-bold">
+                          &quot;{notification.goalTitle}&quot;
+                        </span>
+                        !
                       </span>
-                      !
-                    </>
-                  ) : (
-                    <>
+                      {notification.createdAt && (
+                        <span className="text-[10px] dark:text-muted-foreground mt-1">
+                          {formatDistanceToNow(
+                            new Date(notification.createdAt),
+                            {
+                              addSuffix: true,
+                            }
+                          )}
+                        </span>
+                      )}
+                    </div>
+                  </Link>
+                </DropdownMenuItem>
+              ) : (
+                // System notification
+                <DropdownMenuItem className="flex items-center gap-3 py-2">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage
+                      src={notification.senderProfilePicture}
+                      alt={notification.senderName || "User"}
+                    />
+                    <AvatarFallback>
+                      <Settings className="w-4 h-4 text-muted-foreground" />
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col">
+                    <span className="text-xs dark:text-muted-foreground">
                       Your goal{" "}
                       <span className="font-bold">
                         &quot;{notification.goalTitle}&quot;
                       </span>{" "}
                       is due soon.
-                    </>
-                  )}
-                </span>
-                {notification.createdAt && (
-                  <span className="text-[10px] dark:text-muted-foreground mt-1">
-                    {formatDistanceToNow(new Date(notification.createdAt), {
-                      addSuffix: true,
-                    })}
-                  </span>
-                )}
-              </div>
+                    </span>
+                    {notification.createdAt && (
+                      <span className="text-[10px] dark:text-muted-foreground mt-1">
+                        {formatDistanceToNow(new Date(notification.createdAt), {
+                          addSuffix: true,
+                        })}
+                      </span>
+                    )}
+                  </div>
+                </DropdownMenuItem>
+              )}
             </DropdownMenuItem>
           ))
         ) : (
@@ -152,7 +175,7 @@ export function NotificationDropdown({
             No notifications
           </DropdownMenuItem>
         )}
-        <DropdownMenuSeparator />
+        {/* <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link
             href="/notifications"
@@ -160,7 +183,7 @@ export function NotificationDropdown({
           >
             View All Notifications
           </Link>
-        </DropdownMenuItem>
+        </DropdownMenuItem> */}
       </DropdownMenuContent>
     </DropdownMenu>
   );
