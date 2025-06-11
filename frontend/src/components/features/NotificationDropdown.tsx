@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Bell, BellDot, Loader2 } from "lucide-react";
+import { Bell, BellDot, Eye, Loader2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -17,10 +17,12 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Settings } from "lucide-react";
 import {
   fetchRecentNotifications,
+  markAllNotificationsAsRead,
   markNotificationAsRead,
 } from "@/api/notification";
 import { NOTIFICATION_TYPE } from "@/lib/constants";
 import { formatDistanceToNow } from "date-fns";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface NotificationDropdownProps {
   buttonClassName?: string;
@@ -78,6 +80,19 @@ export function NotificationDropdown({
     },
   });
 
+  const markAllAsReadMutation = useMutation({
+    mutationFn: () => markAllNotificationsAsRead(idToken),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    },
+  });
+
+  const handleMarkAllAsRead = () => {
+    if (notifications?.some((n) => !n.read)) {
+      markAllAsReadMutation.mutate();
+    }
+  };
+
   const hasUnreads = notifications?.some(
     (notification: Notification) => !notification.read
   );
@@ -106,122 +121,136 @@ export function NotificationDropdown({
           {hasUnreads ? <BellDot /> : <Bell />}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align={align}
-        className="w-80 max-h-96 overflow-y-auto"
-      >
+      <DropdownMenuContent align={align} className="w-80">
         <DropdownMenuLabel>Notifications</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {notificationsLoading ? (
-          <DropdownMenuItem className="items-center justify-center">
-            <Loader2 className="w-4 h-4 animate-spin" />
-          </DropdownMenuItem>
-        ) : notifications && notifications.length > 0 ? (
-          notifications.map((notification: Notification, i: number) => {
-            const unread = !notification.read;
+        <ScrollArea className="max-h-[300px]">
+          {notificationsLoading ? (
+            <DropdownMenuItem className="items-center justify-center">
+              <Loader2 className="w-4 h-4 animate-spin" />
+            </DropdownMenuItem>
+          ) : notifications && notifications.length > 0 ? (
+            notifications.map((notification: Notification, i: number) => {
+              const unread = !notification.read;
 
-            const notificationContent = (
-              <div className="flex items-center gap-3 py-2 w-full">
-                {/* Avatar */}
-                <div className="flex-shrink-0">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage
-                      src={notification.senderProfilePicture}
-                      alt={notification.senderName || "User"}
-                    />
-                    <AvatarFallback>
-                      {notification.notificationType ===
-                      NOTIFICATION_TYPE.INVITE ? (
-                        (notification.senderName || "?")
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")
-                          .toUpperCase()
-                          .slice(0, 2)
-                      ) : (
-                        <Settings className="w-4 h-4 text-muted-foreground" />
-                      )}
-                    </AvatarFallback>
-                  </Avatar>
-                </div>
-                {/* Message + Timestamp */}
-                <div className="flex flex-col">
-                  {notification.notificationType ===
-                  NOTIFICATION_TYPE.INVITE ? (
-                    <span className="text-xs dark:text-muted-foreground">
-                      <span className="font-bold">
-                        {notification.senderName}
-                      </span>{" "}
-                      invited you to join the goal&nbsp;
-                      <span className="font-bold">
-                        &quot;{notification.goalTitle}&quot;
+              const notificationContent = (
+                <div className="flex items-center gap-3 py-2 w-full">
+                  {/* Avatar */}
+                  <div className="flex-shrink-0">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage
+                        src={notification.senderProfilePicture}
+                        alt={notification.senderName || "User"}
+                      />
+                      <AvatarFallback>
+                        {notification.notificationType ===
+                        NOTIFICATION_TYPE.INVITE ? (
+                          (notification.senderName || "?")
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")
+                            .toUpperCase()
+                            .slice(0, 2)
+                        ) : (
+                          <Settings className="w-4 h-4 text-muted-foreground" />
+                        )}
+                      </AvatarFallback>
+                    </Avatar>
+                  </div>
+                  {/* Message + Timestamp */}
+                  <div className="flex flex-col">
+                    {notification.notificationType ===
+                    NOTIFICATION_TYPE.INVITE ? (
+                      <span className="text-xs dark:text-muted-foreground">
+                        <span className="font-bold">
+                          {notification.senderName}
+                        </span>{" "}
+                        invited you to join the goal&nbsp;
+                        <span className="font-bold">
+                          &quot;{notification.goalTitle}&quot;
+                        </span>
+                        !
                       </span>
-                      !
-                    </span>
-                  ) : (
-                    <span className="text-xs dark:text-muted-foreground">
-                      Your goal{" "}
-                      <span className="font-bold">
-                        &quot;{notification.goalTitle}&quot;
-                      </span>{" "}
-                      is due soon.
-                    </span>
-                  )}
-                  {notification.createdAt && (
-                    <span className="text-[10px] dark:text-muted-foreground mt-1">
-                      {formatDistanceToNow(new Date(notification.createdAt), {
-                        addSuffix: true,
-                      })}
-                    </span>
-                  )}
+                    ) : (
+                      <span className="text-xs dark:text-muted-foreground">
+                        Your goal{" "}
+                        <span className="font-bold">
+                          &quot;{notification.goalTitle}&quot;
+                        </span>{" "}
+                        is due soon.
+                      </span>
+                    )}
+                    {notification.createdAt && (
+                      <span className="text-[10px] dark:text-muted-foreground mt-1">
+                        {formatDistanceToNow(new Date(notification.createdAt), {
+                          addSuffix: true,
+                        })}
+                      </span>
+                    )}
+                  </div>
+                  {/* Unread Dot */}
+                  <div className="flex items-center justify-center w-11">
+                    {unread && (
+                      <span
+                        className="inline-block h-2 w-2 rounded-full bg-amber-600"
+                        aria-label="Unread"
+                      />
+                    )}
+                  </div>
                 </div>
-                {/* Unread Dot */}
-                <div className="flex items-center justify-center w-11">
-                  {unread && (
-                    <span
-                      className="inline-block h-2 w-2 rounded-full bg-amber-600"
-                      aria-label="Unread"
-                    />
-                  )}
-                </div>
-              </div>
-            );
+              );
 
-            // For INVITE, wrap in Link
-            if (notification.notificationType === NOTIFICATION_TYPE.INVITE) {
+              // For INVITE, wrap in Link
+              if (notification.notificationType === NOTIFICATION_TYPE.INVITE) {
+                return (
+                  <DropdownMenuItem
+                    asChild
+                    key={notification.id || i}
+                    onClick={() => handleNotificationClick(notification)}
+                    className="p-0"
+                  >
+                    <Link
+                      href="/invitations"
+                      className="no-underline w-full hover:bg-accent"
+                    >
+                      {notificationContent}
+                    </Link>
+                  </DropdownMenuItem>
+                );
+              }
+
+              // For system notification
               return (
                 <DropdownMenuItem
-                  asChild
                   key={notification.id || i}
                   onClick={() => handleNotificationClick(notification)}
                   className="p-0"
                 >
-                  <Link
-                    href="/invitations"
-                    className="no-underline w-full hover:bg-accent"
-                  >
-                    {notificationContent}
-                  </Link>
+                  {notificationContent}
                 </DropdownMenuItem>
               );
-            }
-
-            // For system notification
-            return (
-              <DropdownMenuItem
-                key={notification.id || i}
-                onClick={() => handleNotificationClick(notification)}
-                className="p-0"
-              >
-                {notificationContent}
-              </DropdownMenuItem>
-            );
-          })
-        ) : (
-          <DropdownMenuItem className="text-muted-foreground italic">
-            No notifications
-          </DropdownMenuItem>
-        )}
+            })
+          ) : (
+            <DropdownMenuItem className="text-foreground dark:text-muted-foreground italic">
+              No notifications
+            </DropdownMenuItem>
+          )}
+          <DropdownMenuSeparator />
+        </ScrollArea>
+        <DropdownMenuItem
+          className="text-primary font-medium text-center justify-center group hover:bg-primary/10"
+          onClick={handleMarkAllAsRead}
+          disabled={!hasUnreads || markAllAsReadMutation.isPending}
+        >
+          {markAllAsReadMutation.isPending ? (
+            <Loader2 className="w-4 h-4 animate-spin mr-2" />
+          ) : (
+            <>
+              <Eye className="w-4 h-4 mr-2 text-primary group-hover:scale-110 transition-transform" />
+              Mark all as read
+            </>
+          )}
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
