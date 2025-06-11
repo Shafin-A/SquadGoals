@@ -1,4 +1,4 @@
-import { FREQUENCY } from "./constants";
+import { FREQUENCY, NOTIFICATION_TYPE } from "./constants";
 
 export type User = {
   id: string;
@@ -26,8 +26,10 @@ export type Goal = {
 
 export type Notification = {
   id: number;
-  message: string;
+  notificationType: NOTIFICATION_TYPE;
   createdAt: Date;
   read: boolean;
-  sender?: User;
+  senderName?: string;
+  senderProfilePicture?: string;
+  goalTitle: string;
 };

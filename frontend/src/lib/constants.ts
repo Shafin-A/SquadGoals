@@ -9,3 +9,8 @@ export const VISIBILITY = {
   PUBLIC: "Public",
   PRIVATE: "Private",
 };
+
+export enum NOTIFICATION_TYPE {
+  INVITE = "INVITE",
+  SYSTEM = "SYSTEM",
+}

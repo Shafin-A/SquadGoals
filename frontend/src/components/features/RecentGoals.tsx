@@ -31,7 +31,7 @@ export const RecentGoals = () => {
       <CardHeader className="flex flex-row items-start justify-between mb-2">
         <div>
           <CardTitle className="text-2xl">Recent Goals</CardTitle>
-          <CardDescription>
+          <CardDescription className="text-foreground dark:text-muted-foreground">
             Discover the latest public goals looking for squad members. <br />
             Join a goal that inspires you or start your own!
           </CardDescription>

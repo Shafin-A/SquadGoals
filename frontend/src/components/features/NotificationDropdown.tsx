@@ -16,6 +16,8 @@ import { useEffect, useState } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Settings } from "lucide-react";
 import { fetchRecentNotifications } from "@/api/notification";
+import { NOTIFICATION_TYPE } from "@/lib/constants";
+import { formatDistanceToNow } from "date-fns";
 
 interface NotificationDropdownProps {
   buttonClassName?: string;
@@ -59,7 +61,7 @@ export function NotificationDropdown({
   const { data: notifications, isLoading: notificationsLoading } = useQuery({
     queryKey: ["notifications"],
     queryFn: () => fetchRecentNotifications({ idToken }),
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && !!idToken,
   });
 
   if (!isAuthenticated) return null;
@@ -94,29 +96,52 @@ export function NotificationDropdown({
             >
               <Avatar className="h-8 w-8">
                 <AvatarImage
-                  src={notification.sender?.profilePicture ?? undefined}
-                  alt={notification.sender?.name ?? "User"}
+                  src={notification.senderProfilePicture}
+                  alt={notification.senderName || "User"}
                 />
                 <AvatarFallback>
-                  {notification.sender?.name ? (
-                    notification.sender.name
+                  {notification.notificationType ===
+                  NOTIFICATION_TYPE.SYSTEM ? (
+                    <Settings className="w-4 h-4 text-muted-foreground" />
+                  ) : (
+                    (notification.senderName || "?")
                       .split(" ")
                       .map((n) => n[0])
                       .join("")
                       .toUpperCase()
                       .slice(0, 2)
-                  ) : (
-                    <Settings className="w-4 h-4 text-muted-foreground" />
                   )}
                 </AvatarFallback>
               </Avatar>
               <div className="flex flex-col">
-                <span className="text-xs text-muted-foreground">
-                  {notification.message}
+                <span className="text-xs dark:text-muted-foreground">
+                  {notification.notificationType ===
+                  NOTIFICATION_TYPE.INVITE ? (
+                    <>
+                      <span className="font-bold">
+                        {notification.senderName}
+                      </span>{" "}
+                      invited you to join the goal&nbsp;
+                      <span className="font-bold">
+                        &quot;{notification.goalTitle}&quot;
+                      </span>
+                      !
+                    </>
+                  ) : (
+                    <>
+                      Your goal{" "}
+                      <span className="font-bold">
+                        &quot;{notification.goalTitle}&quot;
+                      </span>{" "}
+                      is due soon.
+                    </>
+                  )}
                 </span>
                 {notification.createdAt && (
-                  <span className="text-[10px] text-gray-400 mt-1">
-                    {new Date(notification.createdAt).toLocaleString()}
+                  <span className="text-[10px] dark:text-muted-foreground mt-1">
+                    {formatDistanceToNow(new Date(notification.createdAt), {
+                      addSuffix: true,
+                    })}
                   </span>
                 )}
               </div>
