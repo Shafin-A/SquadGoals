@@ -1,5 +1,3 @@
-import { auth } from "@/firebase";
-import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   fetchRecentNotifications,
@@ -7,35 +5,12 @@ import {
   markNotificationAsRead,
 } from "@/api/notification";
 import { Notification } from "@/lib/types";
+import { useFirebaseIdToken } from "@/hooks/useFirebaseIdToken";
 
 export function useNotifications() {
-  const [user, setUser] = useState(() => auth.currentUser);
-  const [idToken, setIdToken] = useState<string>("");
   const queryClient = useQueryClient();
 
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(setUser);
-    return () => unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const fetchIdToken = async () => {
-      if (user) {
-        const token = await user.getIdToken();
-        if (isMounted) setIdToken(token);
-      } else {
-        setIdToken("");
-      }
-    };
-
-    fetchIdToken();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [user]);
+  const { user, idToken } = useFirebaseIdToken();
 
   const isAuthenticated = !!user;
 

@@ -27,9 +27,11 @@ export const fetchRecentGoals = async ({
       },
     }
   );
+
   if (!res.ok) {
     throw new Error("Failed to fetch goals");
   }
+
   return res.json();
 };
 

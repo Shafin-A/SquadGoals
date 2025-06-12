@@ -71,6 +71,7 @@ public class InvitationControllerIntegrationTest {
         goal = new Goal();
         goal.setId(10L);
         goal.setSquad(new HashSet<>());
+        goal.setCreatedBy(inviter);
 
         invitation = new Invitation();
         invitation.setId(100L);

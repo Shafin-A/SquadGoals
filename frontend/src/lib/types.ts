@@ -33,3 +33,9 @@ export type Notification = {
   senderProfilePicture?: string;
   goalTitle: string;
 };
+
+export type Invitation = {
+  id: number;
+  goal: Goal;
+  inviterName: string;
+};

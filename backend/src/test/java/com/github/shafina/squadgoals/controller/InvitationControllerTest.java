@@ -54,6 +54,7 @@ class InvitationControllerTest {
         Goal goal = new Goal();
         goal.setId(5L);
         goal.setSquad(new HashSet<>());
+        goal.setCreatedBy(inviterUser);
 
         Invitation invitation = new Invitation();
         invitation.setId(10L);
