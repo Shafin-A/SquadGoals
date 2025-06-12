@@ -8,10 +8,7 @@ import com.github.shafina.squadgoals.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -54,5 +51,42 @@ public class NotificationController {
         }
         
         return ResponseEntity.ok(notifications.stream().map(NotificationDTO::from).toList());
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<Void> markAsRead(@PathVariable Long id, Authentication authentication) {
+        String firebaseUid = authentication.getName();
+
+        User user = userRepository.findByFirebaseUid(firebaseUid)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        Notification notification = notificationRepository.findByIdAndUser(id, user)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Notification not found"));
+
+        if (!notification.isRead()) {
+            notification.setRead(true);
+            notificationRepository.save(notification);
+        }
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/mark-all-read")
+    public ResponseEntity<Void> markAllAsRead(Authentication authentication) {
+        String firebaseUid = authentication.getName();
+
+        User user = userRepository.findByFirebaseUid(firebaseUid)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        List<Notification> unreadNotifications = notificationRepository.findAllByUserAndReadFalse(user);
+
+        if (!unreadNotifications.isEmpty()) {
+            for (Notification notification : unreadNotifications) {
+                notification.setRead(true);
+            }
+            notificationRepository.saveAll(unreadNotifications);
+        }
+
+        return ResponseEntity.noContent().build();
     }
 }

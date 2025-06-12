@@ -14,13 +14,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class NotificationControllerTest {
 
@@ -132,5 +132,110 @@ public class NotificationControllerTest {
 
         assertEquals(notification.getId(), dto2.id());
         assertEquals(notification.getUser().getName(), dto2.senderName());
+    }
+
+    @Test
+    void markAsRead_shouldMarkNotificationAsRead() {
+        notification.setRead(false);
+
+        when(authentication.getName()).thenReturn("firebase-uid-1");
+        when(userRepository.findByFirebaseUid("firebase-uid-1")).thenReturn(Optional.of(user));
+        when(notificationRepository.findByIdAndUser(notification.getId(), user)).thenReturn(Optional.of(notification));
+
+        ResponseEntity<Void> response = notificationController.markAsRead(notification.getId(), authentication);
+
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+        assertNull(response.getBody());
+
+        assertTrue(notification.isRead());
+        verify(notificationRepository).save(notification);
+    }
+
+    @Test
+    void markAsRead_shouldNotCallSave_whenAlreadyRead() {
+        notification.setRead(true);
+
+        when(authentication.getName()).thenReturn("firebase-uid-1");
+        when(userRepository.findByFirebaseUid("firebase-uid-1")).thenReturn(Optional.of(user));
+        when(notificationRepository.findByIdAndUser(notification.getId(), user)).thenReturn(Optional.of(notification));
+
+        ResponseEntity<Void> response = notificationController.markAsRead(notification.getId(), authentication);
+
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+        verify(notificationRepository, never()).save(any());
+    }
+
+    @Test
+    void markAsRead_shouldThrowNotFound_whenUserNotFound() {
+        when(authentication.getName()).thenReturn("firebase-uid-1");
+        when(userRepository.findByFirebaseUid("firebase-uid-1")).thenReturn(Optional.empty());
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> notificationController.markAsRead(notification.getId(), authentication));
+
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+        assertEquals("User not found", exception.getReason());
+    }
+
+    @Test
+    void markAsRead_shouldThrowNotFound_whenNotificationNotFound() {
+        when(authentication.getName()).thenReturn("firebase-uid-1");
+        when(userRepository.findByFirebaseUid("firebase-uid-1")).thenReturn(Optional.of(user));
+        when(notificationRepository.findByIdAndUser(notification.getId(), user)).thenReturn(Optional.empty());
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> notificationController.markAsRead(notification.getId(), authentication));
+
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+        assertEquals("Notification not found", exception.getReason());
+    }
+
+    @Test
+    void markAllAsRead_shouldMarkAllUnreadNotificationsAsRead() {
+        Notification notification2 = new Notification();
+        notification2.setId(2L);
+        notification2.setRead(false);
+
+        List<Notification> unreadNotifications = Arrays.asList(notification, notification2);
+
+        when(authentication.getName()).thenReturn("firebase-uid-1");
+        when(userRepository.findByFirebaseUid("firebase-uid-1")).thenReturn(Optional.of(user));
+        when(notificationRepository.findAllByUserAndReadFalse(user)).thenReturn(unreadNotifications);
+
+        ResponseEntity<Void> response = notificationController.markAllAsRead(authentication);
+
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+        assertTrue(notification.isRead());
+        assertTrue(notification2.isRead());
+        verify(notificationRepository).saveAll(unreadNotifications);
+    }
+
+    @Test
+    void markAllAsRead_shouldThrowNotFound_whenUserNotFound() {
+        when(authentication.getName()).thenReturn("invalid-uid");
+        when(userRepository.findByFirebaseUid("invalid-uid")).thenReturn(Optional.empty());
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> notificationController.markAllAsRead(authentication)
+        );
+
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+        assertEquals("User not found", exception.getReason());
+    }
+
+    @Test
+    void markAllAsRead_shouldDoNothing_whenNoUnreadNotifications() {
+        when(authentication.getName()).thenReturn("firebase-uid-1");
+        when(userRepository.findByFirebaseUid("firebase-uid-1")).thenReturn(Optional.of(user));
+        when(notificationRepository.findAllByUserAndReadFalse(user)).thenReturn(Collections.emptyList());
+
+        ResponseEntity<Void> response = notificationController.markAllAsRead(authentication);
+
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+
+        verify(notificationRepository, never()).saveAll(any());
     }
 }
