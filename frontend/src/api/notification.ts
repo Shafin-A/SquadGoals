@@ -30,17 +30,14 @@ export const fetchRecentNotifications = async ({
 export const markNotificationAsRead = async (
   notificationId: number,
   idToken: string
-): Promise<unknown> => {
+): Promise<void> => {
   const res = await fetch(
-    `http://localhost:8080/api/notifications/${notificationId}`,
+    `http://localhost:8080/api/notifications/${notificationId}/read`,
     {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${idToken}`,
-        body: JSON.stringify({
-          read: true,
-        }),
       },
     }
   );
@@ -48,11 +45,11 @@ export const markNotificationAsRead = async (
   if (!res.ok) {
     throw new Error("Failed to mark notification as read");
   }
-
-  return res.json();
 };
 
-export const markAllNotificationsAsRead = async (idToken: string) => {
+export const markAllNotificationsAsRead = async (
+  idToken: string
+): Promise<void> => {
   const res = await fetch(
     `http://localhost:8080/api/notifications/mark-all-read`,
     {

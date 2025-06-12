@@ -53,7 +53,7 @@ public class NotificationController {
         return ResponseEntity.ok(notifications.stream().map(NotificationDTO::from).toList());
     }
 
-    @PatchMapping("/{id}")
+    @PatchMapping("/{id}/read")
     public ResponseEntity<Void> markAsRead(@PathVariable Long id, Authentication authentication) {
         String firebaseUid = authentication.getName();
 
