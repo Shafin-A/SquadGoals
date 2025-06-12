@@ -18,12 +18,16 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @Import(SecurityConfig.class)
@@ -161,5 +165,70 @@ public class NotificationControllerIntegrationTest {
         mockMvc.perform(get("/api/notifications"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(555L));
+    }
+
+    @Test
+    @WithMockUser(username = "firebase-uid-1")
+    void markAsRead_shouldMarkNotificationAsRead() throws Exception {
+        when(userRepository.findByFirebaseUid("firebase-uid-1")).thenReturn(Optional.of(user));
+        when(notificationRepository.findByIdAndUser(notification.getId(), user)).thenReturn(Optional.of(notification));
+
+        assertFalse(notification.isRead());
+
+        mockMvc.perform(patch("/api/notifications/" + notification.getId() + "/read"))
+                .andExpect(status().isNoContent());
+
+        assertTrue(notification.isRead());
+    }
+
+    @Test
+    @WithMockUser(username = "firebase-uid-1")
+    void markAsRead_shouldReturnNotFound_whenUserNotFound() throws Exception {
+        when(userRepository.findByFirebaseUid("firebase-uid-1")).thenReturn(Optional.empty());
+
+        mockMvc.perform(patch("/api/notifications/" + notification.getId() + "/read"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @WithMockUser(username = "firebase-uid-1")
+    void markAsRead_shouldReturnNotFound_whenNotificationNotFound() throws Exception {
+        when(userRepository.findByFirebaseUid("firebase-uid-1")).thenReturn(Optional.of(user));
+        when(notificationRepository.findByIdAndUser(notification.getId(), user)).thenReturn(Optional.empty());
+
+        mockMvc.perform(patch("/api/notifications/" + notification.getId() + "/read"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @WithMockUser(username = "firebase-uid-1")
+    void markAllAsRead_shouldMarkAllUnreadNotificationsAsRead() throws Exception {
+        Notification notification2 = new Notification();
+        notification2.setId(2L);
+        notification2.setRead(false);
+
+        List<Notification> unreadNotifications = Arrays.asList(notification, notification2);
+
+        when(userRepository.findByFirebaseUid("firebase-uid-1")).thenReturn(Optional.of(user));
+        when(notificationRepository.findByIdAndUser(notification.getId(), user)).thenReturn(Optional.of(notification));
+        when(notificationRepository.findAllByUserAndReadFalse(user)).thenReturn(unreadNotifications);
+
+        assertFalse(notification.isRead());
+        assertFalse(notification2.isRead());
+
+        mockMvc.perform(patch("/api/notifications/mark-all-read"))
+                .andExpect(status().isNoContent());
+
+        assertTrue(notification.isRead());
+        assertTrue(notification2.isRead());
+    }
+
+    @Test
+    @WithMockUser(username = "firebase-uid-1")
+    void markAllAsRead_shouldReturnNotFound_whenUserNotFound() throws Exception {
+        when(userRepository.findByFirebaseUid("firebase-uid-1")).thenReturn(Optional.empty());
+
+        mockMvc.perform(patch("/api/notifications/mark-all-read"))
+                .andExpect(status().isNotFound());
     }
 }
