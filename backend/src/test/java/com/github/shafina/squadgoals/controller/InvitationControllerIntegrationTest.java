@@ -1,7 +1,7 @@
 package com.github.shafina.squadgoals.controller;
 
 import com.github.shafina.squadgoals.config.SecurityConfig;
-import com.github.shafina.squadgoals.enums.Status;
+import com.github.shafina.squadgoals.enums.InvitationStatus;
 import com.github.shafina.squadgoals.model.Goal;
 import com.github.shafina.squadgoals.model.Invitation;
 import com.github.shafina.squadgoals.model.User;
@@ -78,14 +78,14 @@ public class InvitationControllerIntegrationTest {
         invitation.setInvitedUser(invitedUser);
         invitation.setInviter(inviter);
         invitation.setGoal(goal);
-        invitation.setStatus(Status.PENDING);
+        invitation.setStatus(InvitationStatus.PENDING);
     }
 
     @Test
     @WithMockUser(username = "firebase-uid-1")
     void getInvitations_shouldReturnPendingInvitations() throws Exception {
         when(userRepository.findByFirebaseUid("firebase-uid-1")).thenReturn(Optional.of(invitedUser));
-        when(invitationRepository.findByInvitedUserAndStatus(invitedUser, Status.PENDING))
+        when(invitationRepository.findByInvitedUserAndStatus(invitedUser, InvitationStatus.PENDING))
                 .thenReturn(List.of(invitation));
 
         mockMvc.perform(get("/api/invitations"))
@@ -98,7 +98,7 @@ public class InvitationControllerIntegrationTest {
     @WithMockUser(username = "firebase-uid-1")
     void getInvitations_shouldReturnEmptyList_whenNoInvitations() throws Exception {
         when(userRepository.findByFirebaseUid("firebase-uid-1")).thenReturn(Optional.of(invitedUser));
-        when(invitationRepository.findByInvitedUserAndStatus(invitedUser, Status.PENDING))
+        when(invitationRepository.findByInvitedUserAndStatus(invitedUser, InvitationStatus.PENDING))
                 .thenReturn(Collections.emptyList());
 
         mockMvc.perform(get("/api/invitations"))
@@ -159,7 +159,7 @@ public class InvitationControllerIntegrationTest {
     @Test
     @WithMockUser(username = "firebase-uid-1")
     void acceptInvitation_shouldReturnOk_whenAlreadyAccepted() throws Exception {
-        invitation.setStatus(Status.ACCEPTED);
+        invitation.setStatus(InvitationStatus.ACCEPTED);
         when(invitationRepository.findById(100L)).thenReturn(Optional.of(invitation));
         when(userRepository.findByFirebaseUid("firebase-uid-1")).thenReturn(Optional.of(invitedUser));
 
@@ -210,7 +210,7 @@ public class InvitationControllerIntegrationTest {
     @Test
     @WithMockUser(username = "firebase-uid-1")
     void declineInvitation_shouldReturnOk_whenAlreadyDeclined() throws Exception {
-        invitation.setStatus(Status.DECLINED);
+        invitation.setStatus(InvitationStatus.DECLINED);
         when(invitationRepository.findById(100L)).thenReturn(Optional.of(invitation));
         when(userRepository.findByFirebaseUid("firebase-uid-1")).thenReturn(Optional.of(invitedUser));
 

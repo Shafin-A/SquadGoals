@@ -3,7 +3,7 @@ package com.github.shafina.squadgoals.controller;
 import com.github.shafina.squadgoals.dto.CreateGoalRequest;
 import com.github.shafina.squadgoals.dto.GoalDTO;
 import com.github.shafina.squadgoals.enums.NotificationType;
-import com.github.shafina.squadgoals.enums.Status;
+import com.github.shafina.squadgoals.enums.InvitationStatus;
 import com.github.shafina.squadgoals.model.*;
 import com.github.shafina.squadgoals.repository.*;
 import jakarta.validation.Valid;
@@ -84,7 +84,7 @@ public class GoalController {
                     invitation.setGoal(savedGoal);
                     invitation.setInvitedUser(invitedUser);
                     invitation.setInviter(creator);
-                    invitation.setStatus(Status.PENDING);
+                    invitation.setStatus(InvitationStatus.PENDING);
                     invitationRepository.save(invitation);
 
                     Notification notification = new Notification();

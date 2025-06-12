@@ -1,7 +1,7 @@
 package com.github.shafina.squadgoals.controller;
 
 import com.github.shafina.squadgoals.dto.InvitationDTO;
-import com.github.shafina.squadgoals.enums.Status;
+import com.github.shafina.squadgoals.enums.InvitationStatus;
 import com.github.shafina.squadgoals.model.Goal;
 import com.github.shafina.squadgoals.model.Invitation;
 import com.github.shafina.squadgoals.model.User;
@@ -40,7 +40,7 @@ public class InvitationController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
         List<Invitation> pendingInvitations = invitationRepository.findByInvitedUserAndStatus(user,
-                Status.PENDING);
+                InvitationStatus.PENDING);
 
         List<InvitationDTO> result = pendingInvitations.stream()
                 .map(InvitationDTO::from)
@@ -70,7 +70,7 @@ public class InvitationController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
-        invitation.setStatus(Status.ACCEPTED);
+        invitation.setStatus(InvitationStatus.ACCEPTED);
         invitationRepository.save(invitation);
 
         Goal goal = invitation.getGoal();
@@ -103,7 +103,7 @@ public class InvitationController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
-        invitation.setStatus(Status.DECLINED);
+        invitation.setStatus(InvitationStatus.DECLINED);
         invitationRepository.save(invitation);
 
         return ResponseEntity.ok().build();

@@ -1,6 +1,6 @@
 package com.github.shafina.squadgoals.model;
 
-import com.github.shafina.squadgoals.enums.Status;
+import com.github.shafina.squadgoals.enums.InvitationStatus;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -22,7 +22,7 @@ public class Invitation {
     private User inviter;
 
     @Enumerated(EnumType.STRING)
-    private Status status = Status.PENDING;
+    private InvitationStatus status = InvitationStatus.PENDING;
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -58,12 +58,12 @@ public class Invitation {
         this.inviter = inviter;
     }
 
-    public Status getStatus() {
+    public InvitationStatus getStatus() {
         return status;
     }
 
-    public void setStatus(Status status) {
-        this.status = status;
+    public void setStatus(InvitationStatus invitationStatus) {
+        this.status = invitationStatus;
     }
 
     public LocalDateTime getCreatedAt() {

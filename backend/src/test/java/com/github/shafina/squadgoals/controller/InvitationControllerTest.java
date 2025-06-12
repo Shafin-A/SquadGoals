@@ -1,7 +1,7 @@
 package com.github.shafina.squadgoals.controller;
 
 import com.github.shafina.squadgoals.dto.InvitationDTO;
-import com.github.shafina.squadgoals.enums.Status;
+import com.github.shafina.squadgoals.enums.InvitationStatus;
 import com.github.shafina.squadgoals.model.Goal;
 import com.github.shafina.squadgoals.model.Invitation;
 import com.github.shafina.squadgoals.model.User;
@@ -61,11 +61,11 @@ class InvitationControllerTest {
         invitation.setInviter(inviterUser);
         invitation.setInvitedUser(invitedUser);
         invitation.setGoal(goal);
-        invitation.setStatus(Status.PENDING);
+        invitation.setStatus(InvitationStatus.PENDING);
 
         when(authentication.getName()).thenReturn(firebaseInvitedUid);
         when(userRepository.findByFirebaseUid(firebaseInvitedUid)).thenReturn(Optional.of(invitedUser));
-        when(invitationRepository.findByInvitedUserAndStatus(invitedUser, Status.PENDING)).thenReturn(List.of(invitation));
+        when(invitationRepository.findByInvitedUserAndStatus(invitedUser, InvitationStatus.PENDING)).thenReturn(List.of(invitation));
 
         ResponseEntity<List<InvitationDTO>> response = invitationController.getInvitations(authentication);
 
@@ -103,7 +103,7 @@ class InvitationControllerTest {
         invitation.setId(invitationId);
         invitation.setInvitedUser(invitedUser);
         invitation.setGoal(goal);
-        invitation.setStatus(Status.PENDING);
+        invitation.setStatus(InvitationStatus.PENDING);
 
         when(invitationRepository.findById(invitationId)).thenReturn(Optional.of(invitation));
         when(authentication.getName()).thenReturn(firebaseUid);
@@ -112,7 +112,7 @@ class InvitationControllerTest {
         ResponseEntity<Void> response = invitationController.acceptInvitation(invitationId, authentication);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(Status.ACCEPTED, invitation.getStatus());
+        assertEquals(InvitationStatus.ACCEPTED, invitation.getStatus());
         assertTrue(goal.getSquad().contains(invitedUser));
         verify(invitationRepository).save(invitation);
         verify(goalRepository).save(goal);
@@ -162,7 +162,7 @@ class InvitationControllerTest {
         Invitation invitation = new Invitation();
         invitation.setId(invitationId);
         invitation.setInvitedUser(invitedUser);
-        invitation.setStatus(Status.PENDING);
+        invitation.setStatus(InvitationStatus.PENDING);
 
         when(invitationRepository.findById(invitationId)).thenReturn(Optional.of(invitation));
         when(authentication.getName()).thenReturn(firebaseUid);
@@ -171,7 +171,7 @@ class InvitationControllerTest {
         ResponseEntity<Void> response = invitationController.declineInvitation(invitationId, authentication);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(Status.DECLINED, invitation.getStatus());
+        assertEquals(InvitationStatus.DECLINED, invitation.getStatus());
         verify(invitationRepository).save(invitation);
     }
 
