@@ -1,6 +1,10 @@
 "use client";
 
-import { fetchInvitations } from "@/api/invitation";
+import {
+  acceptInvitation,
+  fetchInvitations,
+  rejectInvitation,
+} from "@/api/invitation";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,12 +15,14 @@ import {
 } from "@/components/ui/card";
 import { useFirebaseIdToken } from "@/hooks/useFirebaseIdToken";
 import { Invitation } from "@/lib/types";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Frown, Inbox, Loader2 } from "lucide-react";
 import { GoalItem } from "./GoalItem";
+import { INVITATION_STATUS } from "@/lib/constants";
 
 export const Invitations = () => {
   const { user, idToken } = useFirebaseIdToken();
+  const queryClient = useQueryClient();
 
   const isAuthenticated = !!user;
 
@@ -29,6 +35,66 @@ export const Invitations = () => {
     queryKey: ["invitations"],
     queryFn: () => fetchInvitations({ idToken }),
     enabled: isAuthenticated && !!idToken,
+  });
+
+  const acceptMutation = useMutation({
+    mutationFn: (invitationId: number) =>
+      acceptInvitation(invitationId, idToken),
+    onMutate: async (invitationId) => {
+      await queryClient.cancelQueries({ queryKey: ["invitations"] });
+
+      const previousInvitations = queryClient.getQueryData<Invitation[]>([
+        "invitations",
+      ]);
+
+      queryClient.setQueryData<Invitation[]>(["invitations"], (old) =>
+        old?.map((invitation) =>
+          invitation.id === invitationId
+            ? { ...invitation, status: INVITATION_STATUS.ACCEPTED }
+            : invitation
+        )
+      );
+
+      return { previousInvitations };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousInvitations) {
+        queryClient.setQueryData(["invitations"], context.previousInvitations);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["invitations"] });
+    },
+  });
+
+  const rejectMutation = useMutation({
+    mutationFn: (invitationId: number) =>
+      rejectInvitation(invitationId, idToken),
+    onMutate: async (invitationId) => {
+      await queryClient.cancelQueries({ queryKey: ["invitations"] });
+
+      const previousInvitations = queryClient.getQueryData<Invitation[]>([
+        "invitations",
+      ]);
+
+      queryClient.setQueryData<Invitation[]>(["invitations"], (old) =>
+        old?.map((invitation) =>
+          invitation.id === invitationId
+            ? { ...invitation, status: INVITATION_STATUS.DECLINED }
+            : invitation
+        )
+      );
+
+      return { previousInvitations };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousInvitations) {
+        queryClient.setQueryData(["invitations"], context.previousInvitations);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["invitations"] });
+    },
   });
 
   return (
@@ -71,9 +137,32 @@ export const Invitations = () => {
                       <GoalItem goal={invitation.goal} variant="compact" />
                     </div>
                     <div className="flex gap-2 flex-shrink-0">
-                      <Button size="sm">Accept</Button>
-                      <Button size="sm" variant="destructive">
-                        Decline
+                      <Button
+                        size="sm"
+                        onClick={() => acceptMutation.mutate(invitation.id)}
+                        disabled={
+                          acceptMutation.isPending || rejectMutation.isPending
+                        }
+                      >
+                        {acceptMutation.isPending ? (
+                          <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                        ) : (
+                          "Accept"
+                        )}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => rejectMutation.mutate(invitation.id)}
+                        disabled={
+                          acceptMutation.isPending || rejectMutation.isPending
+                        }
+                      >
+                        {rejectMutation.isPending ? (
+                          <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                        ) : (
+                          "Decline"
+                        )}
                       </Button>
                     </div>
                   </CardContent>
