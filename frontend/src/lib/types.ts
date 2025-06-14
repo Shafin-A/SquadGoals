@@ -1,4 +1,4 @@
-import { FREQUENCY, NOTIFICATION_TYPE } from "./constants";
+import { FREQUENCY, INVITATION_STATUS, NOTIFICATION_TYPE } from "./constants";
 
 export type User = {
   id: string;
@@ -38,4 +38,14 @@ export type Invitation = {
   id: number;
   goal: Goal;
   inviterName: string;
+  status: INVITATION_STATUS;
+};
+
+export type PaginatedResponse<T> = {
+  content: T[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  last: boolean;
 };

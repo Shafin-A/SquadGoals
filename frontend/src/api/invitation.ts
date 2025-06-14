@@ -1,17 +1,27 @@
-import { Invitation } from "@/lib/types";
+import { INVITATION_STATUS } from "@/lib/constants";
+import { Invitation, PaginatedResponse } from "@/lib/types";
 
 export const fetchInvitations = async ({
   idToken,
+  status = INVITATION_STATUS.PENDING,
+  page = 0,
+  size = 10,
 }: {
   idToken: string;
-}): Promise<Invitation[]> => {
-  const res = await fetch(`http://localhost:8080/api/invitations`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${idToken}`,
-    },
-  });
+  status?: string;
+  page?: number;
+  size?: number;
+}): Promise<PaginatedResponse<Invitation>> => {
+  const res = await fetch(
+    `http://localhost:8080/api/invitations?status=${status}&page=${page}&size=${size}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${idToken}`,
+      },
+    }
+  );
 
   if (!res.ok) {
     throw new Error("Failed to fetch invitations");

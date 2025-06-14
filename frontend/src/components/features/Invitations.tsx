@@ -1,101 +1,44 @@
 "use client";
 
-import {
-  acceptInvitation,
-  fetchInvitations,
-  rejectInvitation,
-} from "@/api/invitation";
 import { Button } from "@/components/ui/button";
 import {
   Card,
+  CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
-  CardDescription,
-  CardContent,
 } from "@/components/ui/card";
-import { useFirebaseIdToken } from "@/hooks/useFirebaseIdToken";
-import { Invitation } from "@/lib/types";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { useInvitations } from "@/hooks/useInvitations";
 import { Frown, Inbox, Loader2 } from "lucide-react";
-import { GoalItem } from "./GoalItem";
-import { INVITATION_STATUS } from "@/lib/constants";
+import { GoalItem } from "@/components/features/GoalItem";
 
 export const Invitations = () => {
-  const { user, idToken } = useFirebaseIdToken();
-  const queryClient = useQueryClient();
-
-  const isAuthenticated = !!user;
+  const {
+    invitationsQuery,
+    handleAcceptInvitation,
+    acceptMutation,
+    handleDeclineInvitation,
+    rejectMutation,
+    page,
+    setPage,
+  } = useInvitations();
 
   const {
-    data: invitations = [],
+    data: paginatedInvitations,
     isLoading,
     isError,
     error,
-  } = useQuery<Invitation[], Error>({
-    queryKey: ["invitations"],
-    queryFn: () => fetchInvitations({ idToken }),
-    enabled: isAuthenticated && !!idToken,
-  });
+  } = invitationsQuery;
 
-  const acceptMutation = useMutation({
-    mutationFn: (invitationId: number) =>
-      acceptInvitation(invitationId, idToken),
-    onMutate: async (invitationId) => {
-      await queryClient.cancelQueries({ queryKey: ["invitations"] });
-
-      const previousInvitations = queryClient.getQueryData<Invitation[]>([
-        "invitations",
-      ]);
-
-      queryClient.setQueryData<Invitation[]>(["invitations"], (old) =>
-        old?.map((invitation) =>
-          invitation.id === invitationId
-            ? { ...invitation, status: INVITATION_STATUS.ACCEPTED }
-            : invitation
-        )
-      );
-
-      return { previousInvitations };
-    },
-    onError: (err, variables, context) => {
-      if (context?.previousInvitations) {
-        queryClient.setQueryData(["invitations"], context.previousInvitations);
-      }
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["invitations"] });
-    },
-  });
-
-  const rejectMutation = useMutation({
-    mutationFn: (invitationId: number) =>
-      rejectInvitation(invitationId, idToken),
-    onMutate: async (invitationId) => {
-      await queryClient.cancelQueries({ queryKey: ["invitations"] });
-
-      const previousInvitations = queryClient.getQueryData<Invitation[]>([
-        "invitations",
-      ]);
-
-      queryClient.setQueryData<Invitation[]>(["invitations"], (old) =>
-        old?.map((invitation) =>
-          invitation.id === invitationId
-            ? { ...invitation, status: INVITATION_STATUS.DECLINED }
-            : invitation
-        )
-      );
-
-      return { previousInvitations };
-    },
-    onError: (err, variables, context) => {
-      if (context?.previousInvitations) {
-        queryClient.setQueryData(["invitations"], context.previousInvitations);
-      }
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["invitations"] });
-    },
-  });
+  const invitations = paginatedInvitations?.content ?? [];
 
   return (
     <Card className="w-full max-w-2xl rounded-2xl shadow-lg p-8 mx-auto">
@@ -129,46 +72,87 @@ export const Invitations = () => {
               </p>
             </div>
           ) : (
-            <div className="grid gap-4">
-              {invitations.map((invitation) => (
-                <Card key={invitation.id} className="w-full">
-                  <CardContent className="p-6 flex items-center justify-between gap-6">
-                    <div className="flex-1">
-                      <GoalItem goal={invitation.goal} variant="compact" />
-                    </div>
-                    <div className="flex gap-2 flex-shrink-0">
-                      <Button
-                        size="sm"
-                        onClick={() => acceptMutation.mutate(invitation.id)}
-                        disabled={
-                          acceptMutation.isPending || rejectMutation.isPending
+            <>
+              <div className="grid gap-4">
+                {invitations.map((invitation) => (
+                  <Card key={invitation.id} className="w-full">
+                    <CardContent className="p-6 flex items-center justify-between gap-6">
+                      <div className="flex-1">
+                        <GoalItem goal={invitation.goal} variant="compact" />
+                      </div>
+                      <div className="flex gap-2 flex-shrink-0">
+                        <Button
+                          size="sm"
+                          onClick={() => handleAcceptInvitation(invitation.id)}
+                          disabled={
+                            acceptMutation.isPending || rejectMutation.isPending
+                          }
+                        >
+                          {acceptMutation.isPending ? (
+                            <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                          ) : (
+                            "Accept"
+                          )}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleDeclineInvitation(invitation.id)}
+                          disabled={
+                            acceptMutation.isPending || rejectMutation.isPending
+                          }
+                        >
+                          {rejectMutation.isPending ? (
+                            <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                          ) : (
+                            "Decline"
+                          )}
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              {paginatedInvitations && paginatedInvitations.totalPages > 1 && (
+                <Pagination className="mt-4">
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        onClick={() => setPage((prev) => prev - 1)}
+                        className={
+                          page === 0 ? "pointer-events-none opacity-50" : ""
                         }
-                      >
-                        {acceptMutation.isPending ? (
-                          <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                        ) : (
-                          "Accept"
-                        )}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => rejectMutation.mutate(invitation.id)}
-                        disabled={
-                          acceptMutation.isPending || rejectMutation.isPending
+                      />
+                    </PaginationItem>
+
+                    {Array.from({
+                      length: paginatedInvitations.totalPages,
+                    }).map((_, index) => (
+                      <PaginationItem key={index}>
+                        <PaginationLink
+                          isActive={index === page}
+                          onClick={() => setPage(index)}
+                        >
+                          {index + 1}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() => setPage((prev) => prev + 1)}
+                        className={
+                          paginatedInvitations.last
+                            ? "pointer-events-none opacity-50"
+                            : ""
                         }
-                      >
-                        {rejectMutation.isPending ? (
-                          <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                        ) : (
-                          "Decline"
-                        )}
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              )}
+            </>
           )}
         </section>
       </CardContent>
