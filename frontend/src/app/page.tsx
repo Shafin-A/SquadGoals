@@ -45,7 +45,7 @@ export default async function Home() {
         </div>
         <div className="w-full mt-8">
           <h1 className="text-3xl md:text-4xl font-bold mb-4 text-center lg:text-left">
-            Recent Goals Looking For Squad Members
+            Explore New Goals And Send A Request To Join!
           </h1>
           <HydrationBoundary state={dehydrate(queryClient)}>
             <RecentGoals />

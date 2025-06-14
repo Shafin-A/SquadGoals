@@ -16,10 +16,13 @@ import { auth } from "@/firebase";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { NotificationDropdown } from "./NotificationDropdown";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function Header() {
   const router = useRouter();
   const [user, setUser] = useState(() => auth.currentUser);
+
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(setUser);
@@ -32,6 +35,7 @@ export default function Header() {
     try {
       await auth.signOut();
       document.cookie = "idToken=; path=/; max-age=0";
+      queryClient.clear();
       router.push("/");
     } catch (error) {
       console.error("Logout failed:", error);
