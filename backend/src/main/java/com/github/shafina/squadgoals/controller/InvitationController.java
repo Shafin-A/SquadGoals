@@ -1,6 +1,7 @@
 package com.github.shafina.squadgoals.controller;
 
 import com.github.shafina.squadgoals.dto.InvitationDTO;
+import com.github.shafina.squadgoals.dto.PaginatedResponse;
 import com.github.shafina.squadgoals.enums.InvitationStatus;
 import com.github.shafina.squadgoals.model.Goal;
 import com.github.shafina.squadgoals.model.Invitation;
@@ -8,6 +9,10 @@ import com.github.shafina.squadgoals.model.User;
 import com.github.shafina.squadgoals.repository.GoalRepository;
 import com.github.shafina.squadgoals.repository.InvitationRepository;
 import com.github.shafina.squadgoals.repository.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -33,20 +38,43 @@ public class InvitationController {
     }
 
     @GetMapping
-    public ResponseEntity<List<InvitationDTO>> getInvitations(Authentication authentication) {
-        String firebaseUid = authentication.getName();
+    public ResponseEntity<PaginatedResponse<InvitationDTO>> getInvitations(
+            @RequestParam(defaultValue = "pending") String status,
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
+            Authentication authentication) {
 
+        String firebaseUid = authentication.getName();
         User user = userRepository.findByFirebaseUid(firebaseUid)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
-        List<Invitation> pendingInvitations = invitationRepository.findByInvitedUserAndStatus(user,
-                InvitationStatus.PENDING);
+        InvitationStatus invitationStatus;
 
-        List<InvitationDTO> result = pendingInvitations.stream()
+        try {
+            invitationStatus = InvitationStatus.valueOf(status.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid status");
+        }
+
+        Page<Invitation> invitations = invitationRepository.findAllByInvitedUserAndStatus(user, invitationStatus, pageable);
+
+        if (invitations == null) {
+            invitations = Page.empty();
+        }
+
+        List<InvitationDTO> invitationDTOs = invitations.getContent().stream()
                 .map(InvitationDTO::from)
                 .toList();
 
-        return ResponseEntity.ok(result);
+        PaginatedResponse<InvitationDTO> response = new PaginatedResponse<>(
+                invitationDTOs,
+                invitations.getNumber(),
+                invitations.getSize(),
+                invitations.getTotalElements(),
+                invitations.getTotalPages(),
+                invitations.isLast()
+        );
+
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/{invitationId}/accept")

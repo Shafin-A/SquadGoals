@@ -1,6 +1,7 @@
 package com.github.shafina.squadgoals.controller;
 
 import com.github.shafina.squadgoals.dto.InvitationDTO;
+import com.github.shafina.squadgoals.dto.PaginatedResponse;
 import com.github.shafina.squadgoals.enums.InvitationStatus;
 import com.github.shafina.squadgoals.model.Goal;
 import com.github.shafina.squadgoals.model.Invitation;
@@ -10,6 +11,10 @@ import com.github.shafina.squadgoals.repository.InvitationRepository;
 import com.github.shafina.squadgoals.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -48,7 +53,7 @@ class InvitationControllerTest {
 
         String firebaseInviterUid = "uid123";
         User inviterUser = new User();
-        inviterUser.setId(1L);
+        inviterUser.setId(2L);
         inviterUser.setFirebaseUid(firebaseInviterUid);
 
         Goal goal = new Goal();
@@ -65,26 +70,122 @@ class InvitationControllerTest {
 
         when(authentication.getName()).thenReturn(firebaseInvitedUid);
         when(userRepository.findByFirebaseUid(firebaseInvitedUid)).thenReturn(Optional.of(invitedUser));
-        when(invitationRepository.findByInvitedUserAndStatus(invitedUser, InvitationStatus.PENDING)).thenReturn(List.of(invitation));
 
-        ResponseEntity<List<InvitationDTO>> response = invitationController.getInvitations(authentication);
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Invitation> invitationPage = new PageImpl<>(List.of(invitation), pageable, 1);
+
+        when(invitationRepository.findAllByInvitedUserAndStatus(invitedUser, InvitationStatus.PENDING, pageable))
+                .thenReturn(invitationPage);
+
+        ResponseEntity<PaginatedResponse<InvitationDTO>> response = invitationController.getInvitations(
+                "pending", pageable, authentication);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        List<InvitationDTO> body = response.getBody();
+        PaginatedResponse<InvitationDTO> body = response.getBody();
 
         assertNotNull(body);
-        assertEquals(1, body.size());
+        assertEquals(1, body.totalElements());
+        assertEquals(InvitationStatus.PENDING, body.content().get(0).status());
+    }
+
+    @Test
+    void getInvitations_returnsAcceptedInvitations() {
+        String firebaseInvitedUid = "uid123";
+        User invitedUser = new User();
+        invitedUser.setId(1L);
+        invitedUser.setFirebaseUid(firebaseInvitedUid);
+
+        String firebaseInviterUid = "uid123";
+        User inviterUser = new User();
+        inviterUser.setId(2L);
+        inviterUser.setFirebaseUid(firebaseInviterUid);
+
+        Goal goal = new Goal();
+        goal.setId(5L);
+        goal.setSquad(new HashSet<>());
+        goal.setCreatedBy(inviterUser);
+
+        Invitation invitation = new Invitation();
+        invitation.setId(10L);
+        invitation.setInviter(inviterUser);
+        invitation.setInvitedUser(invitedUser);
+        invitation.setGoal(goal);
+        invitation.setStatus(InvitationStatus.ACCEPTED);
+
+        when(authentication.getName()).thenReturn(firebaseInvitedUid);
+        when(userRepository.findByFirebaseUid(firebaseInvitedUid)).thenReturn(Optional.of(invitedUser));
+
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Invitation> invitationPage = new PageImpl<>(List.of(invitation), pageable, 1);
+
+        when(invitationRepository.findAllByInvitedUserAndStatus(invitedUser, InvitationStatus.ACCEPTED, pageable))
+                .thenReturn(invitationPage);
+
+        ResponseEntity<PaginatedResponse<InvitationDTO>> response = invitationController.getInvitations(
+                "accepted", pageable, authentication);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        PaginatedResponse<InvitationDTO> body = response.getBody();
+
+        assertNotNull(body);
+        assertEquals(1, body.totalElements());
+        assertEquals(InvitationStatus.ACCEPTED, body.content().get(0).status());
+    }
+
+    @Test
+    void getInvitations_returnsDeclinedInvitations() {
+        String firebaseInvitedUid = "uid123";
+        User invitedUser = new User();
+        invitedUser.setId(1L);
+        invitedUser.setFirebaseUid(firebaseInvitedUid);
+
+        String firebaseInviterUid = "uid123";
+        User inviterUser = new User();
+        inviterUser.setId(2L);
+        inviterUser.setFirebaseUid(firebaseInviterUid);
+
+        Goal goal = new Goal();
+        goal.setId(5L);
+        goal.setSquad(new HashSet<>());
+        goal.setCreatedBy(inviterUser);
+
+        Invitation invitation = new Invitation();
+        invitation.setId(10L);
+        invitation.setInviter(inviterUser);
+        invitation.setInvitedUser(invitedUser);
+        invitation.setGoal(goal);
+        invitation.setStatus(InvitationStatus.DECLINED);
+
+        when(authentication.getName()).thenReturn(firebaseInvitedUid);
+        when(userRepository.findByFirebaseUid(firebaseInvitedUid)).thenReturn(Optional.of(invitedUser));
+
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Invitation> invitationPage = new PageImpl<>(List.of(invitation), pageable, 1);
+
+        when(invitationRepository.findAllByInvitedUserAndStatus(invitedUser, InvitationStatus.DECLINED, pageable))
+                .thenReturn(invitationPage);
+
+        ResponseEntity<PaginatedResponse<InvitationDTO>> response = invitationController.getInvitations(
+                "declined", pageable, authentication);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        PaginatedResponse<InvitationDTO> body = response.getBody();
+
+        assertNotNull(body);
+        assertEquals(1, body.totalElements());
+        assertEquals(InvitationStatus.DECLINED, body.content().get(0).status());
     }
 
     @Test
     void getInvitations_userNotFound_throwsException() {
         String firebaseUid = "uid123";
+
+        Pageable pageable = PageRequest.of(0, 10);
+
         when(authentication.getName()).thenReturn(firebaseUid);
         when(userRepository.findByFirebaseUid(firebaseUid)).thenReturn(Optional.empty());
 
-        assertThrows(ResponseStatusException.class, () -> {
-            invitationController.getInvitations(authentication);
-        });
+        assertThrows(ResponseStatusException.class, () -> invitationController.getInvitations("pending", pageable, authentication));
     }
 
     @Test
@@ -146,9 +247,7 @@ class InvitationControllerTest {
     void acceptInvitation_invitationNotFound() {
         Long invitationId = 1L;
         when(invitationRepository.findById(invitationId)).thenReturn(Optional.empty());
-        assertThrows(ResponseStatusException.class, () -> {
-            invitationController.acceptInvitation(invitationId, authentication);
-        });
+        assertThrows(ResponseStatusException.class, () -> invitationController.acceptInvitation(invitationId, authentication));
     }
 
     @Test
@@ -203,8 +302,6 @@ class InvitationControllerTest {
     void declineInvitation_invitationNotFound() {
         Long invitationId = 1L;
         when(invitationRepository.findById(invitationId)).thenReturn(Optional.empty());
-        assertThrows(ResponseStatusException.class, () -> {
-            invitationController.declineInvitation(invitationId, authentication);
-        });
+        assertThrows(ResponseStatusException.class, () -> invitationController.declineInvitation(invitationId, authentication));
     }
 }

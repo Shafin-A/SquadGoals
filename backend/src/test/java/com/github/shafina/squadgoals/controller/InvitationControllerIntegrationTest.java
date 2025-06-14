@@ -15,17 +15,19 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -84,26 +86,73 @@ public class InvitationControllerIntegrationTest {
     @Test
     @WithMockUser(username = "firebase-uid-1")
     void getInvitations_shouldReturnPendingInvitations() throws Exception {
-        when(userRepository.findByFirebaseUid("firebase-uid-1")).thenReturn(Optional.of(invitedUser));
-        when(invitationRepository.findByInvitedUserAndStatus(invitedUser, InvitationStatus.PENDING))
-                .thenReturn(List.of(invitation));
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Invitation> invitationPage = new PageImpl<>(List.of(invitation), pageable, 1);
 
-        mockMvc.perform(get("/api/invitations"))
+        when(userRepository.findByFirebaseUid("firebase-uid-1")).thenReturn(Optional.of(invitedUser));
+        when(invitationRepository.findAllByInvitedUserAndStatus(eq(invitedUser), eq(InvitationStatus.PENDING), any(Pageable.class)))
+                .thenReturn(invitationPage);
+
+        mockMvc.perform(get("/api/invitations?page=0&size=10"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$[0].id").value(invitation.getId()));
+                .andExpect(jsonPath("$.content[0].id").value(invitation.getId()))
+                .andExpect(jsonPath("$.content[0].status").value(InvitationStatus.PENDING.name()));
+    }
+
+    @Test
+    @WithMockUser(username = "firebase-uid-1")
+    void getInvitations_shouldReturnAcceptedInvitations() throws Exception {
+        invitation.setStatus(InvitationStatus.ACCEPTED);
+
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Invitation> invitationPage = new PageImpl<>(List.of(invitation), pageable, 1);
+
+        when(userRepository.findByFirebaseUid("firebase-uid-1")).thenReturn(Optional.of(invitedUser));
+        when(invitationRepository.findAllByInvitedUserAndStatus(eq(invitedUser), eq(InvitationStatus.ACCEPTED), any(Pageable.class)))
+                .thenReturn(invitationPage);
+
+        mockMvc.perform(get("/api/invitations?status=accepted&page=0&size=10"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.content[0].id").value(invitation.getId()))
+                .andExpect(jsonPath("$.content[0].status").value(InvitationStatus.ACCEPTED.name()));
+    }
+
+    @Test
+    @WithMockUser(username = "firebase-uid-1")
+    void getInvitations_shouldReturnDeclinedInvitations() throws Exception {
+        invitation.setStatus(InvitationStatus.DECLINED);
+
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Invitation> invitationPage = new PageImpl<>(List.of(invitation), pageable, 1);
+
+        when(userRepository.findByFirebaseUid("firebase-uid-1")).thenReturn(Optional.of(invitedUser));
+        when(invitationRepository.findAllByInvitedUserAndStatus(eq(invitedUser), eq(InvitationStatus.DECLINED), any(Pageable.class)))
+                .thenReturn(invitationPage);
+
+        mockMvc.perform(get("/api/invitations?status=declined&page=0&size=10"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.content[0].id").value(invitation.getId()))
+                .andExpect(jsonPath("$.content[0].status").value(InvitationStatus.DECLINED.name()));
     }
 
     @Test
     @WithMockUser(username = "firebase-uid-1")
     void getInvitations_shouldReturnEmptyList_whenNoInvitations() throws Exception {
-        when(userRepository.findByFirebaseUid("firebase-uid-1")).thenReturn(Optional.of(invitedUser));
-        when(invitationRepository.findByInvitedUserAndStatus(invitedUser, InvitationStatus.PENDING))
-                .thenReturn(Collections.emptyList());
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Invitation> invitationPage = new PageImpl<>(Collections.emptyList(), pageable, 1);
 
-        mockMvc.perform(get("/api/invitations"))
+        when(userRepository.findByFirebaseUid("firebase-uid-1")).thenReturn(Optional.of(invitedUser));
+        when(invitationRepository.findAllByInvitedUserAndStatus(invitedUser, InvitationStatus.PENDING, pageable))
+                .thenReturn(invitationPage);
+
+        mockMvc.perform(get("/api/invitations?page=0&size=10"))
                 .andExpect(status().isOk())
-                .andExpect(content().json("[]"));
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content").isEmpty());
     }
 
     @Test
