@@ -1,29 +1,35 @@
-import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   acceptInvitation,
   fetchInvitations,
-  rejectInvitation,
+  declineInvitation,
 } from "@/api/invitation";
 import { useFirebaseIdToken } from "@/hooks/useFirebaseIdToken";
 import { Invitation, PaginatedResponse } from "@/lib/types";
 import { INVITATION_STATUS } from "@/lib/constants";
 
-export function useInvitations(pageSize: number = 10) {
+export function useInvitations({
+  status = INVITATION_STATUS.PENDING,
+  page = 0,
+  pageSize = 10,
+}: {
+  status?: string;
+  page?: number;
+  pageSize?: number;
+}) {
   const { user, idToken } = useFirebaseIdToken();
   const queryClient = useQueryClient();
-  const [page, setPage] = useState(0);
 
   const isAuthenticated = !!user;
 
   const invitationsQuery = useQuery<PaginatedResponse<Invitation>, Error>({
-    queryKey: ["invitations", page, pageSize],
+    queryKey: ["invitations", status, page, pageSize],
     queryFn: () =>
       fetchInvitations({
         idToken,
+        status,
         page,
         size: pageSize,
-        status: INVITATION_STATUS.PENDING,
       }),
     enabled: isAuthenticated && !!idToken,
   });
@@ -70,7 +76,7 @@ export function useInvitations(pageSize: number = 10) {
 
   const declineMutation = useMutation({
     mutationFn: (invitationId: number) =>
-      rejectInvitation(invitationId, idToken),
+      declineInvitation(invitationId, idToken),
     onMutate: async (invitationId) => {
       await queryClient.cancelQueries({ queryKey: ["invitations"] });
 
@@ -123,11 +129,8 @@ export function useInvitations(pageSize: number = 10) {
       isPending: acceptMutation.isPending,
     },
     handleDeclineInvitation,
-    rejectMutation: {
+    declineMutation: {
       isPending: declineMutation.isPending,
     },
-    page,
-    setPage,
-    pageSize,
   };
 }

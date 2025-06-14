@@ -52,12 +52,12 @@ export const acceptInvitation = async (
   return res.json();
 };
 
-export const rejectInvitation = async (
+export const declineInvitation = async (
   invitationId: number,
   idToken: string
 ) => {
   const res = await fetch(
-    `http://localhost:8080/api/invitations/${invitationId}/reject`,
+    `http://localhost:8080/api/invitations/${invitationId}/decline`,
     {
       method: "POST",
       headers: {
@@ -68,7 +68,7 @@ export const rejectInvitation = async (
   );
 
   if (!res.ok) {
-    throw new Error("Failed to reject invitation");
+    throw new Error("Failed to decline invitation");
   }
 
   return res.json();
