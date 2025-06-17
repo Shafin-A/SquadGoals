@@ -28,7 +28,7 @@ public class GoalController {
     private final NotificationRepository notificationRepository;
 
     public GoalController(GoalRepository goalRepository, UserRepository userRepository, TagRepository tagRepository,
-                          InvitationRepository invitationRepository, NotificationRepository notificationRepository) {
+            InvitationRepository invitationRepository, NotificationRepository notificationRepository) {
         this.goalRepository = goalRepository;
         this.userRepository = userRepository;
         this.tagRepository = tagRepository;
@@ -122,5 +122,29 @@ public class GoalController {
                         .stream()
                         .map(GoalDTO::from)
                         .collect(Collectors.toList()));
+    }
+
+    @GetMapping("/{goalId}")
+    public ResponseEntity<GoalDTO> getGoalById(
+            @PathVariable Long goalId,
+            Authentication authentication) {
+
+        Goal goal = goalRepository.findById(goalId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Goal not found"));
+
+        if (goal.getPublic()) {
+            return ResponseEntity.ok(GoalDTO.from(goal));
+        }
+
+        String firebaseUid = authentication.getName();
+
+        User requestingUser = userRepository.findByFirebaseUid(firebaseUid)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        if (!goal.getSquad().contains(requestingUser)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have access to this goal");
+        }
+
+        return ResponseEntity.ok(GoalDTO.from(goal));
     }
 }

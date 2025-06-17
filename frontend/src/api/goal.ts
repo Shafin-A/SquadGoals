@@ -55,3 +55,30 @@ export const createGoal = async (
 
   return res.json();
 };
+
+export const fetchGoalById = async ({
+  goalId,
+  idToken,
+}: {
+  goalId: string;
+  idToken?: string;
+}): Promise<Goal> => {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (idToken) {
+    headers.Authorization = `Bearer ${idToken}`;
+  }
+
+  const res = await fetch(`http://localhost:8080/api/goals/${goalId}`, {
+    method: "GET",
+    headers,
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch goal");
+  }
+
+  return res.json();
+};
